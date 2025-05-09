@@ -1,9 +1,9 @@
 from abc import ABCMeta
 from typing import Dict, Callable, Union
 
-import rospy
+# import rospy
 import torch
-from hidden_hand_interface import syn_execution
+# from hidden_hand_interface import syn_execution
 
 from aicon.base_classes.components import ActionComponent
 from aicon.base_classes.connections import ActiveInterconnection
@@ -17,7 +17,7 @@ class RBOHandSynergyAction(ActionComponent, metaclass=ABCMeta):
         super().__init__(name, connections, goals=goals, dtype=dtype, device=device, mockbuild=mockbuild)
         if mockbuild:
             return
-        self.hand_controller = rospy.ServiceProxy('synergy_execution_srv', syn_execution)
+        # self.hand_controller = rospy.ServiceProxy('synergy_execution_srv', syn_execution)
         self.next_controller_cmd = None
         if initially_grasped:
             self.next_controller_cmd = "close_base_tip_sequentially_movement_fast_plus_thumb"
