@@ -103,22 +103,14 @@ class DistGraspHandConnection(ActiveInterconnection):
     def define_implicit_connection_function(self):
 
         def connection_func(likelihood_grasped_drawer, pose_ee, position_drawer, ee_force_mag_meas, gripper_activation):
-            print(f"likehlihood {likelihood_grasped_drawer}")
-            print(f"pose_ee {pose_ee}")
-            print(f"position_drawer {position_drawer}")
-            print(f"ee_force_mag_meas {ee_force_mag_meas}")
-            print(f"gripper_activation {gripper_activation}")
             expected_dist = torch.norm(position_drawer - pose_ee)
             likelihood_given_dist = torch.exp(-expected_dist * 4)
             innovation_from_dist = likelihood_given_dist - likelihood_grasped_drawer
-            print(f'expected_dist {expected_dist}')
 
             # hand and force measurements are only relevant if we are close (otherwise from other source...)
             if (expected_dist < 0.05 and ee_force_mag_meas > 10):
                 # under 2N is just FT noise
                 likelihood_from_hand_and_force = torch.clip(1 - torch.exp(-(ee_force_mag_meas - 5)), 0, 1) * gripper_activation
-                print("GRASPING")
-                print(torch.clip(1 - torch.exp(-(ee_force_mag_meas - 5)), 0, 1))
                 # but we need an open hand to increase this likelihood
                 # so we generate a negative gradient
                 if (likelihood_grasped_drawer < 0.1) and (likelihood_from_hand_and_force < 0.1) and (gripper_activation > 0.5):
