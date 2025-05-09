@@ -1,9 +1,10 @@
+from __future__ import annotations
 from typing import Tuple, List, Dict, Iterable
 
 import torch
 from tensordict import TensorDict
 
-from aicon import ActiveInterconnection
+# from aicon import ActiveInterconnection
 from aicon.base_classes.derivatives import DerivativeDict
 
 

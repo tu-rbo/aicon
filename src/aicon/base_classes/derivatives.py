@@ -1,6 +1,6 @@
+from __future__ import annotations
 from itertools import accumulate
 from typing import List, Union, Iterable, Dict
-
 import torch
 from tensordict import TensorDict
 
@@ -277,24 +277,15 @@ class DerivativeDict:
         return new_derivative_dict
 
     @classmethod
-    def from_tensor_dict(cls, tensor_dict: TensorDict, timestamp: torch.Tensor) -> DerivativeDict:
-        """
-        Create a DerivativeDict from a TensorDict and timestamp.
-        
-        Args:
-            tensor_dict: TensorDict containing derivative tensors
-            timestamp: Timestamp for the derivatives
-            
-        Returns:
-            New DerivativeDict initialized from the TensorDict
-        """
-        new_derivative_dict = cls()
-        for k, v in tensor_dict.items():
-            new_derivative_dict.derivative_blocks[k] = QuantityRelatedDerivativeBlock(related_quantity=k)
-            new_derivative_dict.derivative_blocks[k].derivatives_tensor = v.unsqueeze(0)
-            new_derivative_dict.derivative_blocks[k].timestamps = [[timestamp.unsqueeze(0)]]
-            new_derivative_dict.derivative_blocks[k].quantity_traces = [[k]]
-        return new_derivative_dict
+    def from_tensor_dict(cls, tensor_dict : TensorDict, timestamp) -> DerivativeDict:
+        new_derivtaive_dict = DerivativeDict()
+        for k in tensor_dict.keys(include_nested=True, leaves_only=True):
+            new_block = QuantityRelatedDerivativeBlock(k[-1])
+            new_block.derivatives_tensor = tensor_dict[k].unsqueeze(0)
+            new_block.timestamps = [[timestamp.unsqueeze(0)]]
+            new_block.quantity_traces = [list(k)]
+            new_derivtaive_dict[k[-1]] = new_block
+        return new_derivtaive_dict
 
     def __str__(self):
         return str({k: str(v) for k, v in self.derivative_blocks.items()})
@@ -307,6 +298,9 @@ class DerivativeDict:
 
     def __setitem__(self, key, value):
         self.derivative_blocks[key] = value
+
+    def __contains__(self, item):
+        return item in self.derivative_blocks
     
 
 
