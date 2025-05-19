@@ -23,7 +23,6 @@ from aicon import sensors, middleware, math, inference, drawer_experiment, block
 
 # Import examples
 from aicon.blocksworld_experiment import run_experiment_sync
-from aicon.drawer_experiment.experiment_scripts import run_experiment
 
 __all__ = [
     "Component",
