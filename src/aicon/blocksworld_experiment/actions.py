@@ -69,16 +69,13 @@ class BlockPuttingAction(ActionComponent):
                 elif action_idx[0] == 1:
                         if clear[action_idx[1]] and current_state[action_idx[1], action_idx[2]] == 1:
                             break
-                gradient_steepness[*choosen_gradient_idx] = 0.0
+                gradient_steepness[tuple(choosen_gradient_idx)] = 0.0
             if choosen_gradient_idx is None:
                 print("No gradients available!")
                 self.internal_action = None
                 return
-            print("Current trace", my_derivatives.quantity_traces[choosen_gradient_idx[0]])
-            print("Current Action", action_idx)
-            print("non abs val", my_derivatives.derivatives_tensor[*choosen_gradient_idx])
             self.internal_action = torch.zeros((2, NUM_BLOCKS, NUM_BLOCKS), dtype=self.dtype, device=self.device)
-            self.internal_action[*action_idx] = 1
+            self.internal_action[tuple(action_idx)] = 1
             self.tried_actions[current_state] = torch.logical_or(already_tried_mask, self.internal_action)
             print(self.internal_action)
             self.wait_for_action_counter = 0

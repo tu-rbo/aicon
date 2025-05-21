@@ -7,8 +7,8 @@ This module in part includes code written by Manuel Baum, extended by Vito Menge
 """
 
 import numpy as np
-import rospy
-import tf
+# import rospy
+# import tf
 import torch
 
 gravity = torch.tensor([0., 0., -9.81])

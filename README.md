@@ -37,6 +37,11 @@ This is the specific implementation for the paper "No Plan but Everything Under 
   - Drawer opening experiment (ROS) - demonstrates robustness in uncertain environments
   - Blocksworld experiment (Python sequential) - shows solving sequential tasks without planning
 
+
+## Getting Started
+
+To get started we recommend following the simulated [drawer opening tutorial](Tutorial.md). 
+
 ## Installation
 
 ### Dependencies
@@ -63,6 +68,33 @@ conda activate aicon
 3. Install Python dependencies:
 ```bash
 pip install -e .
+```
+
+### (Optional) Simulation Environment Installation
+
+#### MuJoCo
+Install MuJoCo by following the instructions on the [official repo](https://github.com/google-deepmind/mujoco?tab=readme-ov-file#installation). We recommend using the prebuilt binaries 
+
+#### Robosuite
+
+Clone and install robosuite 1.4.1:
+```bash
+git clone  --branch v1.4.1 https://github.com/ARISE-Initiative/robosuite.git
+cd robosuite
+pip install -r requirements.txt
+pip install -r requirements-extra.txt
+```
+Test the installation:
+
+```bash
+python robosuite/demos/demo_random_action.py
+```
+
+Clone and install robosuite-task-zoo:
+```bash
+git clone https://github.com/ARISE-Initiative/robosuite-task-zoo.git
+cd robosuite-task-zoo
+pip install -r requirements.txt
 ```
 
 ## Architecture
@@ -102,6 +134,15 @@ from aicon.drawer_experiment import run_experiment
 
 # Run the experiment
 run_experiment()
+```
+
+### Simulated Drawer Opening
+
+```python
+from aicon.drawer_tutorial import run_demo
+
+# Run the experiment
+run_demo()
 ```
 
 ## Documentation

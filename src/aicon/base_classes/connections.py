@@ -4,7 +4,7 @@ Active Interconnection classes for the AICON framework.
 This module provides classes for managing active interconnections between components,
 including the base ActiveInterconnection class and its derivatives.
 """
-
+from __future__ import annotations
 from abc import abstractmethod
 from threading import Lock
 from typing import Callable, Tuple, Dict, Union
