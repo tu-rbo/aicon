@@ -37,6 +37,11 @@ This is the specific implementation for the paper "No Plan but Everything Under 
   - Drawer opening experiment (ROS) - demonstrates robustness in uncertain environments
   - Blocksworld experiment (Python sequential) - shows solving sequential tasks without planning
 
+
+## Getting Started
+
+To get started we recommend following the simulated [drawer opening tutorial](Tutorial.md). 
+
 ## Installation
 
 ### Dependencies
