@@ -5,7 +5,6 @@ import lovely_tensors as lt
 import numpy as np
 import robosuite as suite
 import torch
-from loguru import logger
 from robosuite.devices import Keyboard, SpaceMouse
 from robosuite.utils.input_utils import input2action
 from robosuite.utils.transform_utils import quat2mat
@@ -58,8 +57,6 @@ def main(device, env, rec_save_path=None):
     print(f"\nCabinet position from obs: {cabinet_position}")
     print(f"Cabinet orientation matrix from obs:\n{cabinet_orientation}")
 
-    offset = np.array([0.01042636, 0.16967794, -0.13888733])
-
     # setup aicon
     component_building_functions, connection_building_functions, frame_rates = (
         get_building_functions_basic_drawer_motion(env)
@@ -81,21 +78,7 @@ def main(device, env, rec_save_path=None):
             [curr_commanded_vel.cpu().numpy(), [2 * curr_commanded_gripper.squeeze().cpu().numpy() - 1]]
         )
 
-        # logger.info(f"action: {action}")
-        # logger.info(f"curr_commanded_vel: {curr_commanded_vel}")
-        # logger.info(f"curr_commanded_gripper: {curr_commanded_gripper}")
-
         obs, rew, done, info = env.step(action)
-
-        force = robot.get_sensor_measurement("gripper0_force_ee")
-        torque = robot.get_sensor_measurement("gripper0_torque_ee")
-
-        # Check drawer position and orientation
-        better_drawer_pos = env.env.get_drawer_handle_pos(offset)
-
-        # Print drawer state information
-        # print(f"Drawer position: {drawer_pos:.4f} (negative = open)")
-        # print(f"Drawer opening direction: {drawer_direction}")
 
         # Print success state and joint info
         if done:
@@ -103,6 +86,7 @@ def main(device, env, rec_save_path=None):
 
         curr_t += env.control_timestep
         env.render()
+
 
 def run_demo():
     # Define the desired initial joint positions for the Panda robot (7 joints)
@@ -112,7 +96,6 @@ def run_demo():
     # Pass the initial pose to the setup function
     env, device = setup_env("keyboard", initial_qpos=initial_panda_qpos)
     main(device, env)
-
 
 
 if __name__ == "__main__":
