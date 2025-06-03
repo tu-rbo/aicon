@@ -462,6 +462,12 @@ class EstimationComponent(Component):
         raise NotImplementedError()
 
     def _attempt_update(self, new_time: torch.tensor) -> None:
+        """
+        Attempt to update the component's state.
+        
+        Args:
+            new_time: Current timestamp
+        """
         try:
             self.update_state_and_derivatives(new_time)
         except Exception:
@@ -469,6 +475,16 @@ class EstimationComponent(Component):
             traceback.print_exc()
 
     def update_state_and_derivatives(self, new_time: torch.tensor) -> None:
+        """
+        Computes the output and derivatives of the components f_func,
+        combines them with the derivatives of the connections and then updates the estimated state.
+        
+        Args:
+            new_time: Current timestamp
+        
+        Returns:
+            None
+        """
         start = time.time()
         with self.lock:
             all_inputs = collect_inputs(self.quantities, self.connections, self.get_dt(new_time))
@@ -494,6 +510,26 @@ class EstimationComponent(Component):
 
     def derivative_processing(self, all_inputs, input_names_diff, new_time, output_dict, partial_jacs,
                               relevant_backward_derivatives, relevant_forward_derivatives, required_signs_dict):
+        """
+        Processes the derivatives of the components f_func by combining them with the incoming gradients from the connections.
+        
+        Args:
+            all_inputs: All inputs to the component
+            input_names_diff: Names of the differentiable inputs
+            new_time: Current timestamp
+            output_dict: Output dictionary
+            partial_jacs: Jacobians
+            relevant_backward_derivatives: Relevant backward derivatives
+            relevant_forward_derivatives: Relevant forward derivatives
+            required_signs_dict: Required signs dictionary
+            
+        Returns:
+            Tuple containing:
+            - Backward derivatives
+            - Finished forward derivatives
+            - Forward derivatives
+            - Partial derivatives
+        """
         if self.no_differentiation:
             return DerivativeDict(), DerivativeDict(), DerivativeDict(), DerivativeDict()
         in_out_shapes = collect_shapes(all_inputs, output_dict)

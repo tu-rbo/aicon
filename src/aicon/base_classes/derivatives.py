@@ -313,7 +313,28 @@ def compute_derivatives(partial_derivatives : TensorDict, relevant_forward_deriv
                         required_signs_dict : Dict[str, Dict[str, int]],
                         prevent_repeats : bool = True,
                         max_length_trace : Union[int, None] = None):
-
+    """
+    Applies the components partial derivatives to the gradients and
+    returns a DericativeDict with gradients flows from/to the goal trough the network.
+    
+    Args:
+        partial_derivatives: Partial derivatives of the components f_func
+        relevant_forward_derivatives: Relevant forward derivatives
+        relevant_backward_derivatives: Relevant backward derivatives
+        goal_derivatives: Goal derivatives
+        input_names_diff: Names of the differentiable inputs
+        output_names_diff: Names of the differentiable outputs
+        timestamp: Timestamp
+        required_signs_dict: Required signs dictionary
+        prevent_repeats: Whether to prevent repeated quantities in the chain
+        max_length_trace: Maximum length of the trace
+        
+    Returns:
+        Tuple containing:
+        - New forward derivatives
+        - New backward derivatives
+        - Finished forward derivatives
+    """
     new_forward_derivatives = DerivativeDict()
     for i in input_names_diff:
         if not i in relevant_forward_derivatives:
@@ -390,6 +411,19 @@ def compute_derivatives(partial_derivatives : TensorDict, relevant_forward_deriv
 
 
 def get_steepest_gradient_from_derivative_block(derivative_block : QuantityRelatedDerivativeBlock, time_threshold: torch.Tensor):
+    """
+    Returns the steepest gradient from a derivative block.
+    
+    Args:
+        derivative_block: Derivative block to get the steepest gradient from
+        time_threshold: Time threshold
+        
+    Returns:
+        Tuple containing:
+        - Steepest gradient
+        - Timestamps
+        - Trace
+    """
     grad_norm = torch.norm(derivative_block.derivatives_tensor.view(len(derivative_block.quantity_traces), -1), dim=1)
     oldest_stamp_for_each_grad = torch.cat([torch.min(torch.cat(stamps)).unsqueeze(0) for stamps in derivative_block.timestamps])
     grad_norm[oldest_stamp_for_each_grad < time_threshold] = 0.0
@@ -403,6 +437,14 @@ def get_steepest_gradient_from_derivative_block(derivative_block : QuantityRelat
 
 def get_required_sign_if_applicable(input_name : str, output_name : str,
                                     required_signs_dict : Dict[str, Dict[str, int]]) -> Union[None, int]:
+    """
+    Returns the required sign for a given input and output.
+    
+    Args:
+        input_name: Name of the input
+        output_name: Name of the output
+        required_signs_dict: Required signs dictionary
+    """
     required_sign = None
     if output_name in required_signs_dict:
         if input_name in required_signs_dict[output_name]:

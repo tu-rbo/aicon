@@ -45,7 +45,10 @@ def build_connections():
 
 
 class EEDrawerGraspedConnection(ActiveInterconnection):
-
+    """
+    Active Interconnection between the end-effector and the grasped drawer.
+    The difference in position should be zero, because a grasped object moves together with the end-effector.
+    """
     def __init__(self, name: str, dtype:Union[torch.dtype, None] = None, device : Union[torch.device, None] = None, mockbuild : bool = False):
         super().__init__(name, {"pose_ee": (3,), "uncertainty_ee": (3, 3), "position_drawer": (3,),
                                 "uncertainty_drawer": (3, 3), "likelihood_grasped_drawer": (1,)}, dtype=dtype,
@@ -66,7 +69,10 @@ class EEDrawerGraspedConnection(ActiveInterconnection):
 
 
 class DistDrawerEEConnection(ActiveInterconnection):
-
+    """
+    Active Interconnection between the distance estimator, the end-effector and the drawer position.
+    Our distance estimate should correspond to the distance between the end-effector and the drawer position.
+    """
     def __init__(self, name: str, dtype:Union[torch.dtype, None] = None, device : Union[torch.device, None] = None, mockbuild : bool = False):
         super().__init__(name, {"pose_ee": (6,), "uncertainty_ee": (6, 6), "position_drawer": (3,),
                                 "uncertainty_drawer": (3, 3), "distance_ee_drawer": (2,), "uncertainty_dist": (1,)}, dtype=dtype,
@@ -94,7 +100,10 @@ class DistDrawerEEConnection(ActiveInterconnection):
 
 
 class DistGraspHandConnection(ActiveInterconnection):
-
+    """
+    Active Interconnection that links end-effector, drawer position, force measurements and gripper activation to the grasp likelihood.
+    The likelihood is high if the end-effector is close to the drawer and the force measurements are high.
+    """
     def __init__(self, name: str, dtype:Union[torch.dtype, None] = None, device : Union[torch.device, None] = None, mockbuild : bool = False):
         super().__init__(name, {"pose_ee": (3,), "position_drawer": (3,), "uncertainty_drawer": (3,3), "uncertainty_ee": (3,3),
                                 "likelihood_grasped_drawer": (1,), "gripper_activation": (1,), "ee_force_mag_meas": (1,)}, dtype=dtype,
@@ -128,7 +137,9 @@ class DistGraspHandConnection(ActiveInterconnection):
 
 
 class VisibleEEDrawerConnection(ActiveInterconnection):
-
+    """
+    Active Interconnection between the end-effector, drawer position and drawer visibility likelihood.
+    """
     def __init__(self, name: str, dtype:Union[torch.dtype, None] = None, device : Union[torch.device, None] = None, mockbuild : bool = False):
         super().__init__(name, {"pose_ee": (6,), "uncertainty_ee": (6, 6), "position_drawer": (3,), "uncertainty_drawer": (3, 3), "likelihood_visible_drawer": (1,),}, dtype=dtype,
                          device=device, mockbuild=mockbuild,)
@@ -183,7 +194,9 @@ class DrawerCameraEEConnection(ActiveInterconnection):
 
 
 class EEVeloConnection(ActiveInterconnection):
-
+    """
+    Links the end-effector estimator to the action component by applying the action velocity to the pose.
+    """
     def __init__(self, name: str, dtype:Union[torch.dtype, None] = None, device : Union[torch.device, None] = None, mockbuild : bool = False):
         super().__init__(name, {"pose_ee": (3,), "uncertainty_ee": (3,3), "action_velo_ee": (3,)}, dtype=dtype, device=device, mockbuild=mockbuild,)
 
@@ -200,7 +213,10 @@ class EEVeloConnection(ActiveInterconnection):
 
 
 class EEProprioConnection(ActiveInterconnection):
-
+    """
+    Active Interconnection between the estimated and measured end-effector position.
+    the difference between both quantities should be zero.
+    """
     def __init__(self, name: str, dtype:Union[torch.dtype, None] = None, device : Union[torch.device, None] = None, mockbuild : bool = False):
         super().__init__(name, {"pose_ee": (3,), "uncertainty_ee": (3,3), "ee_pos_meas": (3,)}, dtype=dtype, device=device, mockbuild=mockbuild,)
 
@@ -212,7 +228,10 @@ class EEProprioConnection(ActiveInterconnection):
         return connection_func
 
 class DrawerDirectMeasurementConnection(ActiveInterconnection):
-
+    """
+    Active Interconnection between the drawer position and the measured drawer position.
+    the difference between both quantities should be zero.
+    """
     def __init__(self, name: str, dtype:Union[torch.dtype, None] = None, device : Union[torch.device, None] = None, mockbuild : bool = False):
         super().__init__(name, {"position_drawer": (3,), "uncertainty_drawer": (3,3), "drawer_pos_meas": (3,)}, dtype=dtype, device=device, mockbuild=mockbuild,)
 
@@ -224,7 +243,9 @@ class DrawerDirectMeasurementConnection(ActiveInterconnection):
         return connection_func
 
 class EEFTConnection(ActiveInterconnection):
-
+    """
+    Active Interconnection between the end-effector, the force measurements and the external force.
+    """
     def __init__(self, name: str, dtype:Union[torch.dtype, None] = None, device : Union[torch.device, None] = None, mockbuild : bool = False):
         super().__init__(name, {"pose_ee": (6,), "uncertainty_ee": (6,6), "ee_force_measured": (6,), "ee_force_external": (3,)}, dtype=dtype, device=device, mockbuild=mockbuild,)
 
@@ -248,7 +269,10 @@ class EEFTConnection(ActiveInterconnection):
 
 
 class KinematicJointConnection(ActiveInterconnection):
-
+    """
+    Active Interconnection between the kinematic joint and the drawer position.
+    The postion of the drawer should correspond to the displacement along the kinematic joint axis.
+    """
     def __init__(self, name: str, dtype:Union[torch.dtype, None] = None, device : Union[torch.device, None] = None, mockbuild : bool = False):
         super().__init__(name, {"kinematic_joint": (6,), "uncertainty_joint": (6,6,),
                                 "position_drawer": (3,), "uncertainty_drawer": (3,3,), "likelihood_grasped_drawer": (1,),

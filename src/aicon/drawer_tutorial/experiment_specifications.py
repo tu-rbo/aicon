@@ -13,6 +13,9 @@ from aicon.drawer_tutorial.sensors import DrawerPoseSenser, EEForceSensor, EEPos
 
 
 def get_building_functions_basic_drawer_motion(sim_env_pointer):
+    """
+    Builds the connections and components for the basic drawer motion experiment.
+    """
     connection_builders = build_connections()
     component_builders = {
         "GripperAction": lambda mockbuild: GripperAction("GripperAction",
