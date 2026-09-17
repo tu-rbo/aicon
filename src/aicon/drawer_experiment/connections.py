@@ -53,13 +53,7 @@ class EEDrawerGraspedConnection(ActiveInterconnection):
     def __init__(self, name: str, dtype:Union[torch.dtype, None] = None, device : Union[torch.device, None] = None, mockbuild : bool = False):
         super().__init__(name, {"pose_ee": (6,), "uncertainty_ee": (6, 6), "position_drawer": (3,),
                                 "uncertainty_drawer": (3, 3), "likelihood_grasped_drawer": (1,), "time_since_hand_change": (2,)}, dtype=dtype,
-                         device=device, mockbuild=mockbuild,
-                         # for on/off switching connection we can require gradient signs
-                         # if we want to move the position of the drawer more we want it to be grasped
-                         # if we want to change ee more, we do not want it to be grasped
-                         required_signs_dict={"position_drawer" : {"likelihood_grasped_drawer": 1},
-                                              "uncertainty_drawer": {"likelihood_grasped_drawer": 1},
-                                              "pose_ee" : {"likelihood_grasped_drawer": -1}})
+                         device=device, mockbuild=mockbuild)
 
     def define_implicit_connection_function(self):
         H_grasping_offset = torch.eye(4, dtype=self.dtype, device=self.device)

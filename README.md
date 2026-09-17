@@ -75,6 +75,14 @@ pip install -e .
 #### MuJoCo
 Install MuJoCo by following the instructions on the [official repo](https://github.com/google-deepmind/mujoco?tab=readme-ov-file#installation). We recommend using the prebuilt binaries 
 
+**Pin MuJoCo below 3.3:**
+```bash
+pip install "mujoco==3.2.7"
+```
+MuJoCo 3.3 reordered the arguments of `mj_fullM` (from `(m, dst, M)` to `(m, d, dst)`). robosuite 1.4.1 still
+uses the old order, so any newer MuJoCo crashes on the first controller update with
+`TypeError: mj_fullM(): incompatible function arguments`.
+
 #### Robosuite
 
 Clone and install robosuite 1.4.1:
@@ -90,12 +98,23 @@ Test the installation:
 python robosuite/demos/demo_random_action.py
 ```
 
-Clone and install robosuite-task-zoo:
+Clone and install robosuite-task-zoo (the drawer tutorial gets its `CabinetObject` from here):
 ```bash
 git clone https://github.com/ARISE-Initiative/robosuite-task-zoo.git
 cd robosuite-task-zoo
-pip install -r requirements.txt
+pip install -e . --no-deps
 ```
+`--no-deps` is deliberate: task-zoo's `setup.py` still declares the deprecated `mujoco-py`, which robosuite 1.4.1
+does not use and which fails to build on modern toolchains. Its actual runtime needs (numpy, numba, scipy) are
+already covered by the steps above.
+
+#### Running the tutorial
+
+```bash
+python -m aicon.drawer_tutorial.run_demo
+```
+This opens an on-screen MuJoCo viewer, so it needs a display. `h5py` is also required (robosuite imports it
+via `robosuite.wrappers`); install it with `pip install h5py` if it is not already present.
 
 ## Architecture
 

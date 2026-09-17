@@ -48,8 +48,7 @@ class BelowLikelihood(ActiveInterconnection):
         super().__init__(name, {"likelihood_below": (NUM_BLOCKS, NUM_BLOCKS),
                                 "action_blocks": (2, NUM_BLOCKS, NUM_BLOCKS),
                                 "likelihood_clear": (NUM_BLOCKS,)},
-                         dtype=dtype, device=device, mockbuild=mockbuild,
-                         required_signs_dict={"likelihood_below": {"likelihood_clear": 1}})
+                         dtype=dtype, device=device, mockbuild=mockbuild)
 
     def define_implicit_connection_function(self):
         """

@@ -5,7 +5,7 @@ import lovely_tensors as lt
 import numpy as np
 import robosuite as suite
 import torch
-from robosuite.devices import Keyboard, SpaceMouse
+from robosuite.devices import Keyboard
 from robosuite.utils.input_utils import input2action
 from robosuite.utils.transform_utils import quat2mat
 from robosuite.wrappers import VisualizationWrapper
@@ -90,7 +90,7 @@ def main(device, env, rec_save_path=None):
 
 def run_demo():
     # Define the desired initial joint positions for the Panda robot (7 joints)
-    initial_panda_qpos = np.array([-0.2, 0.2, 0.1, -2.0, 0.0, 1.5, 0.7])
+    initial_panda_qpos = np.array([0.2, 0.2, 0.1, -2.0, 0.0, 1.5, 0.7])
     # initial_panda_qpos = None
 
     # Pass the initial pose to the setup function

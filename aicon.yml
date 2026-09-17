@@ -53,6 +53,8 @@ dependencies:
       - kiwisolver==1.4.5
       - lazy-loader==0.4
       - loguru==0.7.2
+      - lovely-numpy==0.2.24
+      - lovely-tensors==0.1.22
       - lxml==5.2.1
       - lz4==4.3.3
       - markdown-it-py==3.0.0
