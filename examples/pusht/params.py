@@ -13,7 +13,7 @@ __version__ = "1.0.0"
 NUM_KEYPOINTS: int = 8
 
 
-SUCCESS_COVERAGE: float = 0.9 # 0.95 (as gym) also works but sometimes takes considerably more steps
+SUCCESS_COVERAGE: float = 0.9  # 0.95 (as gym) also works but sometimes takes considerably more steps
 
 # gym-pusht's block pose and the estimator's object pose use different reference points on the T.
 # `sim_goal_offset_goal` is added to a sampled start pose before it is passed to the environment,

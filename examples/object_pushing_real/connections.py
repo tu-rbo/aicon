@@ -1043,7 +1043,6 @@ class KeyPoint2ObjectUncertainty(ActiveInterconnection):
         return connection_func
 
 
-
 PROBE_DEPTH = 0.03
 RELEASE_LIFT = 0.015
 CONTACT_DEPTH = 0.026

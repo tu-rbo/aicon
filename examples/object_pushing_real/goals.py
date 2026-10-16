@@ -26,7 +26,6 @@ ANTIPODE_DEBOUNCE: int = 8
 
 
 class Push2GoalReal(Goal):
-
     def __init__(
         self,
         is_active: bool,
@@ -101,7 +100,6 @@ class Push2GoalReal(Goal):
             return (expected_cost,), (expected_cost,)
 
         return goal_func
-
 
 
 HEIGHT_COEF = 4600000.0

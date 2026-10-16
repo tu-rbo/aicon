@@ -56,7 +56,6 @@ class JointLimitOnLikelihoodGoal(Goal):
 
 
 class PostureGoal(Goal):
-
     def __init__(
         self,
         is_active: bool,

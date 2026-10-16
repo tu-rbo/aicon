@@ -616,7 +616,6 @@ class JointLimitLikelihoodConnection(ActiveInterconnection):
 
 
 class JointRangeUtilizationConnection(ActiveInterconnection):
-
     def __init__(
         self,
         name: str,

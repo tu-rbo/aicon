@@ -80,7 +80,6 @@ class JointLimitEstimator(EstimationComponent):
 
 
 class PostureEstimator(EstimationComponent):
-
     cls_quantity_names_and_shapes: Dict[str, Tuple[int]] = {"joint_range_utilization": (7,)}
 
     def initialize_quantities(self):
