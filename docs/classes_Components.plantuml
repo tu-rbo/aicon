@@ -1,0 +1,149 @@
+@startuml classes_Components
+set namespaceSeparator none
+class "ActionComponent" as aicon_base.components.action_components.ActionComponent {
+  active : bool
+  forward_mode : bool
+  {abstract}determine_new_actions() -> None
+  get_specific_gradient(quantity: str, trace: List[str]) -> Tuple[torch.Tensor, List[torch.Tensor], List[str]]
+  get_steepest_gradient(quantity: str, time_threshold: Union[torch.Tensor, None]) -> Tuple[torch.Tensor, List[torch.Tensor], List[str]]
+  get_sum_of_gradients(quantity: str, time_threshold: Union[torch.Tensor, None]) -> torch.Tensor
+  get_sum_of_max_goal_gradients(quantity: str, time_threshold: Union[torch.Tensor, None]) -> torch.Tensor
+  {abstract}send_action_values() -> None
+  start() -> None
+  stop() -> None
+}
+class "ActiveInterconnection" as aicon_base.connections.connections.ActiveInterconnection {
+  c_func : Callable
+  connected_quantities : TensorDict
+  connected_quantities_initialized : dict[str, bool]
+  connected_quantities_timestamps : TensorDict
+  derivatives_backward_mode
+  derivatives_forward_mode
+  device : device
+  dtype : dtype
+  lock
+  name : str
+  required_signs_dict : dict
+  {abstract}define_implicit_connection_function()
+  initial_definitions(quantity_names_and_shapes: Dict[str, Tuple[int]], required_signs_dict: Union[None, Dict[str, Dict[str, int]]])
+}
+class "BatchedEstimationComponent" as aicon_base.components.estimation_components.BatchedEstimationComponent {
+  batch_backward_derivative_combination_strategy : str
+  batch_dimensions : Tuple[int]
+  to_be_batched_inputs : List[str]
+  {abstract}define_estimation_function_f() -> Tuple[Callable, List[str], List[str]]
+  {abstract}determine_current_batch_dimensions(all_inputs: TensorDict)
+  postprocess_derivatives(forward_derivatives, backward_derivatives, finished_forward_derivatives, inputs, outputs, relevant_backward_derivatives)
+  preprocess_inputs(all_inputs: TensorDict) -> TensorDict
+}
+class "Component" as aicon_base.components.base_components.Component {
+  cls_quantity_names_and_shapes : Dict[str, Tuple[int]]
+  connections : Dict[str, Type[ActiveInterconnection]]
+  debug_mode : bool
+  derivatives_backward_mode
+  derivatives_forward_mode
+  device : device
+  dtype : dtype
+  finished_forward_derivatives
+  goals : Dict[str, Type[Goal]]
+  initialized_all_quantities : bool
+  local_quantity_names_and_shapes : Dict[str, Tuple[int]]
+  lock
+  name : str
+  other_synchronization_functions : List[Callable]
+  partial_derivatives : TensorDict
+  quantities : TensorDict
+  timestamp : Tensor
+  get_dt(new_time: torch.tensor) -> torch.tensor
+  initial_definitions(quantity_names_and_shapes: Union[Dict[str, Tuple[int]], None]) -> None
+  {abstract}initialize_quantities() -> bool
+  synchronize() -> None
+  update(new_time: torch.tensor) -> None
+}
+class "DerivativeDict" as aicon_base.derivatives.derivative_maintenance.DerivativeDict {
+  block_dict : dict[str, QuantityRelatedDerivativeBlock]
+  combine_with(derivative_dicts: List[DerivativeDict])
+  from_tensor_dict(tensor_dict: TensorDict, timestamp) -> DerivativeDict
+  full_derivative_string()
+  items()
+  keys()
+  update(derivative_dict: DerivativeDict)
+  update_(derivative_dict: DerivativeDict)
+  values()
+}
+class "EstimationComponent" as aicon_base.components.estimation_components.EstimationComponent {
+  derivatives_backward_mode
+  derivatives_forward_mode
+  f_func
+  f_input_signature
+  f_output_signature_diff
+  f_output_signature_non_diff
+  finished_forward_derivatives
+  goal_values : NoneType, TensorDict
+  idxs_diff_against_args : NoneType
+  max_length_differentiation_trace : NoneType
+  no_backwards_combinations : bool
+  no_differentiation : bool
+  partial_derivatives : TensorDict
+  prevent_loops_in_differentiation : bool
+  quantities : TensorDict
+  {abstract}define_estimation_function_f() -> Tuple[Callable, List[str], List[str]]
+  derivative_processing(all_inputs, input_names_diff, new_time, output_dict, partial_jacs, relevant_backward_derivatives, relevant_forward_derivatives, required_signs_dict)
+  inference_and_differentiation(args, diff_argnums)
+  postprocess_derivatives(forward_derivatives, backward_derivatives, finished_forward_derivatives, inputs, outputs, relevant_backward_derivatives)
+  preprocess_inputs(all_inputs: TensorDict) -> TensorDict
+  update_state_and_derivatives(new_time: torch.tensor) -> None
+}
+class "Goal" as aicon_base.components.goals.Goal {
+  device : Optional[Union[torch.device, None]]
+  dtype : Optional[Union[torch.dtype, None]]
+  fulfilled_value : Union[float, None]
+  g_func : Callable
+  is_active : bool
+  name : str
+  {abstract}define_goal_cost_function()
+}
+class "QuantityRelatedDerivativeBlock" as aicon_base.derivatives.derivative_maintenance.QuantityRelatedDerivativeBlock {
+  derivatives_tensor : Union[torch.Tensor, None]
+  last_partial_derivatives : Union[TensorDict, None]
+  mixed_in_quantity_traces : List[List[List[str]]]
+  quantity_traces : List[List[str]]
+  related_quantity : str
+  timestamps : List[List[torch.Tensor]]
+  apply_new_partial_derivative(partial_derivative: torch.Tensor, related_quantity: str, timestamp: torch.Tensor, required_sign: Union[None, int], prevent_repeats: bool, max_length: Union[int, None], prevent_repeats_harsh: bool)
+  combine_with(same_quantity_derivative_blocks: List[QuantityRelatedDerivativeBlock])
+  derivative_representation(stamp, show_all_times, show_mixins)
+  update(other_derivate_block: QuantityRelatedDerivativeBlock) -> QuantityRelatedDerivativeBlock
+  update_(other_derivate_block: QuantityRelatedDerivativeBlock)
+}
+class "SensorComponent" as aicon_base.components.sensor_components.SensorComponent {
+  initialize_quantities() -> bool
+  {abstract}obtain_measurements() -> bool
+}
+class "VisualizationComponent" as aicon_base.visualization.visualization_component.VisualizationComponent {
+  derivative_viz_funcs_backward : Dict[Tuple[str, ...], Callable]
+  derivative_viz_funcs_forward : Dict[Tuple[str, ...], Callable]
+  generic_viz_funcs : List[Callable]
+  name_remappings : dict
+  node_name_to_layer : dict
+  quantity_viz_funcs : Dict[Tuple[str, ...], Callable]
+  recursive_estimators : dict
+  simple_combinations : dict
+  type_combinations : dict
+  initialize_quantities() -> bool
+  start_network_plotting(component_builders: Dict[str, Callable], connection_builders: Dict[str, Callable], grad_treshold: Dict[str, float])
+}
+aicon_base.components.action_components.ActionComponent --|> aicon_base.components.base_components.Component
+aicon_base.components.estimation_components.BatchedEstimationComponent --|> aicon_base.components.estimation_components.EstimationComponent
+aicon_base.components.estimation_components.EstimationComponent --|> aicon_base.components.base_components.Component
+aicon_base.components.sensor_components.SensorComponent --|> aicon_base.components.base_components.Component
+aicon_base.visualization.visualization_component.VisualizationComponent --|> aicon_base.components.base_components.Component
+aicon_base.derivatives.derivative_maintenance.DerivativeDict --* aicon_base.components.base_components.Component : derivatives_forward_mode
+aicon_base.derivatives.derivative_maintenance.DerivativeDict --* aicon_base.components.base_components.Component : derivatives_backward_mode
+aicon_base.derivatives.derivative_maintenance.DerivativeDict --* aicon_base.components.base_components.Component : finished_forward_derivatives
+aicon_base.derivatives.derivative_maintenance.DerivativeDict --* aicon_base.components.estimation_components.EstimationComponent : derivatives_forward_mode
+aicon_base.derivatives.derivative_maintenance.DerivativeDict --* aicon_base.components.estimation_components.EstimationComponent : derivatives_backward_mode
+aicon_base.derivatives.derivative_maintenance.DerivativeDict --* aicon_base.components.estimation_components.EstimationComponent : finished_forward_derivatives
+aicon_base.derivatives.derivative_maintenance.DerivativeDict --* aicon_base.connections.connections.ActiveInterconnection : derivatives_forward_mode
+aicon_base.derivatives.derivative_maintenance.DerivativeDict --* aicon_base.connections.connections.ActiveInterconnection : derivatives_backward_mode
+@enduml

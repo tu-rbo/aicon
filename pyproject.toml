@@ -1,47 +1,220 @@
 [build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "aicon"
 version = "1.0.0"
-description = "Active Interconnect - A framework for differentiable online multimodal interactive perception"
+description = "Active InterCONnect (AICON): robot behavior from dynamically composed gradient descent over recursive estimators"
 readme = "README.md"
-requires-python = ">=3.10"
-license = {text = "MIT"}
+license = { file = "LICENSE.md" }
 authors = [
-    {name = "Vito Mengers", email = "v.mengers@tu-berlin.de"}
+    { name = "Vito Mengers", email = "v.mengers@tu-berlin.de" },
+    { name = "Adrian Pfisterer", email = "adrian.pfisterer@tu-berlin.de" },
+    { name = "Patrick Lowin", email = "lowin@tu-berlin.de" },
+    { name = "James Reynaldo" },
+    { name = "RBO, TU Berlin", email = "robotics@robotics.tu-berlin.de" },
 ]
+maintainers = [
+    { name = "Vito Mengers", email = "v.mengers@tu-berlin.de" },
+    { name = "Adrian Pfisterer", email = "adrian.pfisterer@tu-berlin.de" },
+    { name = "Patrick Lowin", email = "lowin@tu-berlin.de" },
+]
+keywords = ["aicon", "robotics", "machine learning"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Mathematics",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.10",
+]
+requires-python = ">=3.10"
 dependencies = [
-    "torch==2.4.0",
-    "numpy==1.26.4",
-    "tensordict-nightly==2023.6.8",
-    "tyro==0.8.3",
-    "docstring-parser==0.16",
-    "opencv-python==4.10.0.84",
-    "opencv-contrib-python==4.9.0.80",
-    "psutil==5.9.8",
-    "rich==13.7.1",
-    "shtab==1.7.1",
-    "typing-extensions==4.11.0",
-    "matplotlib==3.8.4",
-    "pandas==2.2.1",
-    "scikit-learn==1.4.2",
-    "scipy==1.13.0",
-    "seaborn==0.13.2",
-    "torchvision==0.19.0",
-    "gymnasium==1.0.0",
-    "pygame==2.6.1",
-    "pymunk==6.9.0",
-    "shapely==2.0.6",
-    "networkx==3.3",
-    "pillow==10.3.0",
-    "tqdm==4.66.2",
-    "pyyaml==6.0.1"
+    "torch>=2.3",
+    "tensordict>=0.8",
+    "numpy",
+    "matplotlib",
+    "networkx",
+    "sympy",
+    "tqdm",
 ]
+
+[project.optional-dependencies]
+# Simulation examples
+pusht = [
+    "gym-pusht>=0.1.5",
+    "gymnasium>=0.29.1",
+    "pymunk>=6.6,<7",  # gym-pusht uses the collision handler API that pymunk 7 removed
+    "numpy<2.5",       # gym-pusht uses np.row_stack, removed in NumPy 2.5
+]
+nav2d = ["scipy"]
+# Simulated manipulation in robosuite, used by drawer_sim (robosuite's wrappers import h5py). robosuite 1.5.2 was
+# released with MuJoCo 3.4; from MuJoCo 3.12 on, its check of the robot's joint types fails.
+robosuite = ["robosuite>=1.5.2,<1.6", "mujoco>=3.3,<3.5", "h5py"]
+# Turning saved frames into videos (aicon_base.experiment_util.frames2vid)
+video = ["opencv-python", "imageio-ffmpeg"]
+# Python-side dependencies of the real-robot examples when using a system-wide ROS 2 installation.
+# ROS 2 itself, tapnet and os2d are not installed from PyPI; see README.md.
+robot = ["opencv-python", "scipy", "torchvision"]
+# PyTorch build, chosen as on pytorch.org: CPU-only or for a CUDA version (uv only, see [tool.uv.sources] and the
+# README). Without one of them, the default wheels from PyPI are installed.
+cpu = ["torch>=2.3", "torchvision"]
+cu126 = ["torch>=2.3", "torchvision"]
+cu130 = ["torch>=2.3", "torchvision"]
+cu132 = ["torch>=2.3", "torchvision"]
+test = ["pytest"]
+# Linters, formatters and coverage used by scripts/test.sh, scripts/refactor.sh and the CI (see docs/coding-standards.md)
+dev = ["pytest", "pylint", "flake8", "ruff", "coverage", "genbadge[coverage]"]
 
 [project.urls]
-Homepage = "https://git.tu-berlin.de/rbo/robotics/aicon"
+Homepage = "https://www.tu.berlin/robotics/papers/noplan"
+Repository = "https://github.com/tu-rbo/aicon"
+Documentation = "https://github.com/tu-rbo/aicon/tree/master/docs"
 
-[tool.setuptools]
-package-dir = {"" = "src"} 
+[tool.hatch.build.targets.wheel]
+packages = ["aicon_base", "aicon_real_robots"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-p no:launch_testing -p no:launch_ros"  # ROS 2's pytest plugins do not support current pytest
+
+# Formatter (scripts/refactor.sh, checked in the CI): ruff format, which only changes the layout of the code
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+# ---------------------------------------------------------------------------------------------------------------------
+# uv:   uv sync --extra pusht --extra nav2d --extra test          (add --extra cpu or --extra cu126/cu130/cu132)
+# ---------------------------------------------------------------------------------------------------------------------
+# At most one PyTorch build at a time; torch and torchvision (robot extra) then come from that build's index.
+[tool.uv]
+conflicts = [[{ extra = "cpu" }, { extra = "cu126" }, { extra = "cu130" }, { extra = "cu132" }]]
+# robosuite requires pynput, only for its keyboard teleoperation (unused here); on Linux pynput needs evdev, which has
+# no wheels and only builds with the Python headers installed. The marker never matches, so pynput is left out.
+override-dependencies = ["pynput; sys_platform == 'never'"]
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu126", extra = "cu126" },
+    { index = "pytorch-cu130", extra = "cu130" },
+    { index = "pytorch-cu132", extra = "cu132" },
+]
+torchvision = [
+    { index = "pytorch-cpu", extra = "cpu" },
+    { index = "pytorch-cu126", extra = "cu126" },
+    { index = "pytorch-cu130", extra = "cu130" },
+    { index = "pytorch-cu132", extra = "cu132" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu126"
+url = "https://download.pytorch.org/whl/cu126"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu132"
+url = "https://download.pytorch.org/whl/cu132"
+explicit = true
+
+# ---------------------------------------------------------------------------------------------------------------------
+# pixi: pixi run pusht | pixi run -e ros build-ros
+# ---------------------------------------------------------------------------------------------------------------------
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+# current tensordict wheels need macOS 14
+platforms = ["linux-64", { name = "osx-arm64-macos14", platform = "osx-arm64", macos = "14.0" }]
+
+[tool.pixi.dependencies]
+python = ">=3.10,<3.13"
+
+[tool.pixi.pypi-dependencies]
+aicon = { path = ".", editable = true }
+
+[tool.pixi.tasks]
+blocksworld = "python -m examples.blocksworld.run_experiment"
+nav2d = "python -m examples.nav_2d.run_experiment"
+pusht = "python -m examples.pusht.run_experiment"
+test = "pytest"
+
+# ROS 2 Humble from RoboStack, for the real-robot examples and the multi-process ROS middleware.
+[tool.pixi.feature.ros]
+channels = ["conda-forge", "robostack-humble"]
+platforms = ["linux-64"]
+
+[tool.pixi.feature.ros.dependencies]
+ros-humble-ros-base = "*"
+ros-humble-cv-bridge = "*"
+ros-humble-tf2-ros-py = "*"
+ros-humble-visualization-msgs = "*"
+# message types of the robot and camera drivers, so that recorded bags contain those topics
+ros-humble-control-msgs = "*"
+ros-humble-realsense2-camera-msgs = "*"
+ros-humble-rosbag2 = "*"
+ros-humble-rosidl-default-generators = "*"
+colcon-common-extensions = "*"
+cmake = "*"
+ninja = "*"
+make = "*"
+compilers = "*"
+pkg-config = "*"
+setuptools = "<80"
+opencv = "*"
+scipy = "*"
+
+[tool.pixi.feature.ros.pypi-dependencies]
+torchvision = "*"
+
+[tool.pixi.feature.ros.activation]
+scripts = ["aicon_ros/pixi_activate.sh"]
+
+[tool.pixi.feature.ros.tasks]
+build-ros = "colcon build --symlink-install --base-paths aicon_ros --build-base build --install-base install"
+real-pushing = { cmd = "python -m examples.object_pushing_real.run_experiment", depends-on = ["build-ros"] }
+real-pushing-sensors = { cmd = "python -m examples.object_pushing_real.run_sensors_only", depends-on = ["build-ros"] }
+drawer = { cmd = "python -m examples.drawer_manipulation.run_experiment", depends-on = ["build-ros"] }
+drawer-sensors = { cmd = "python -m examples.drawer_manipulation.run_sensors_only", depends-on = ["build-ros"] }
+
+[tool.pixi.feature.robosuite.tasks]
+drawer-sim = "python -m examples.drawer_sim.run_experiment"
+
+# evdev (needed by robosuite's pynput on Linux, see [tool.uv]) prebuilt from conda-forge instead of built from source
+[tool.pixi.feature.robosuite.target.linux-64.dependencies]
+evdev = "*"
+
+# PyTorch builds other than the default wheels from PyPI (CUDA 13.0 on Linux), as the uv extras cpu and cu126. The
+# build's index is searched next to PyPI, and its torch (e.g. 2.14.1+cu126) wins over PyPI's of the same version; if
+# PyPI has a newer torch than the index, that one is locked instead, so check the lock after updating it.
+[tool.pixi.feature.torch-cpu.pypi-options]
+extra-index-urls = ["https://download.pytorch.org/whl/cpu"]
+index-strategy = "unsafe-best-match"
+
+[tool.pixi.feature.torch-cu126]
+platforms = ["linux-64"]
+
+[tool.pixi.feature.torch-cu126.pypi-options]
+extra-index-urls = ["https://download.pytorch.org/whl/cu126"]
+index-strategy = "unsafe-best-match"
+
+[tool.pixi.environments]
+default = { features = ["pusht", "nav2d", "video", "test"], solve-group = "default" }
+cpu = { features = ["pusht", "nav2d", "video", "test", "torch-cpu"] }
+robosuite = { features = ["robosuite", "test"] }
+ros = { features = ["ros", "test"] }
+ros-cu126 = { features = ["ros", "test", "torch-cu126"] }

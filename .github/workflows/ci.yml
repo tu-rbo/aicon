@@ -1,0 +1,24 @@
+# GitHub Actions: linters and tests of the simulated examples (see docs/coding-standards.md).
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+          cache: pip
+      # robosuite's renderer imports libGL / libEGL even when nothing is rendered
+      - run: sudo apt-get -qq update && sudo apt-get -qq install -y libgl1 libegl1
+      - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
+      - run: pip install -e ".[test,dev,pusht,nav2d,robosuite]"
+      - run: ruff format --check $(git ls-files '*.py')
+      - run: pylint $(git ls-files '*.py')
+      - run: flake8 $(git ls-files '*.py')
+      - run: pytest --durations=10 --maxfail=2

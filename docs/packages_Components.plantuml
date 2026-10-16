@@ -1,0 +1,100 @@
+@startuml packages_Components
+set namespaceSeparator none
+package "aicon_base" as aicon_base {
+}
+package "aicon_base.components" as aicon_base.components {
+}
+package "aicon_base.components.action_components" as aicon_base.components.action_components {
+}
+package "aicon_base.components.base_components" as aicon_base.components.base_components {
+}
+package "aicon_base.components.estimation_components" as aicon_base.components.estimation_components {
+}
+package "aicon_base.components.goals" as aicon_base.components.goals {
+}
+package "aicon_base.components.sensor_components" as aicon_base.components.sensor_components {
+}
+package "aicon_base.components.util" as aicon_base.components.util {
+}
+package "aicon_base.connections" as aicon_base.connections {
+}
+package "aicon_base.connections.connections" as aicon_base.connections.connections {
+}
+package "aicon_base.derivatives" as aicon_base.derivatives {
+}
+package "aicon_base.derivatives.derivative_maintenance" as aicon_base.derivatives.derivative_maintenance {
+}
+package "aicon_base.derivatives.derivative_processing" as aicon_base.derivatives.derivative_processing {
+}
+package "aicon_base.experiment_util" as aicon_base.experiment_util {
+}
+package "aicon_base.experiment_util.experiment_util" as aicon_base.experiment_util.experiment_util {
+}
+package "aicon_base.experiment_util.frames2vid" as aicon_base.experiment_util.frames2vid {
+}
+package "aicon_base.inference" as aicon_base.inference {
+}
+package "aicon_base.inference.ekf" as aicon_base.inference.ekf {
+}
+package "aicon_base.inference.outlier_rejection" as aicon_base.inference.outlier_rejection {
+}
+package "aicon_base.inference.util" as aicon_base.inference.util {
+}
+package "aicon_base.math" as aicon_base.math {
+}
+package "aicon_base.math.robot_kinematics" as aicon_base.math.robot_kinematics {
+}
+package "aicon_base.math.se3_and_SE3" as aicon_base.math.se3_and_SE3 {
+}
+package "aicon_base.middleware" as aicon_base.middleware {
+}
+package "aicon_base.middleware.python_sequential" as aicon_base.middleware.python_sequential {
+}
+package "aicon_base.visualization" as aicon_base.visualization {
+}
+package "aicon_base.visualization.network_graphs" as aicon_base.visualization.network_graphs {
+}
+package "aicon_base.visualization.visualization_component" as aicon_base.visualization.visualization_component {
+}
+aicon_base.components --> aicon_base.components.action_components
+aicon_base.components --> aicon_base.components.base_components
+aicon_base.components --> aicon_base.components.estimation_components
+aicon_base.components --> aicon_base.components.goals
+aicon_base.components --> aicon_base.components.sensor_components
+aicon_base.components.action_components --> aicon_base.components.base_components
+aicon_base.components.action_components --> aicon_base.components.util
+aicon_base.components.action_components --> aicon_base.derivatives.derivative_processing
+aicon_base.components.base_components --> aicon_base.components.goals
+aicon_base.components.base_components --> aicon_base.connections.connections
+aicon_base.components.base_components --> aicon_base.derivatives.derivative_maintenance
+aicon_base.components.estimation_components --> aicon_base.components.base_components
+aicon_base.components.estimation_components --> aicon_base.components.util
+aicon_base.components.estimation_components --> aicon_base.derivatives.derivative_maintenance
+aicon_base.components.estimation_components --> aicon_base.derivatives.derivative_processing
+aicon_base.components.sensor_components --> aicon_base.components.base_components
+aicon_base.components.util --> aicon_base.derivatives.derivative_maintenance
+aicon_base.connections --> aicon_base.connections.connections
+aicon_base.connections.connections --> aicon_base.derivatives.derivative_maintenance
+aicon_base.derivatives --> aicon_base.derivatives.derivative_maintenance
+aicon_base.derivatives --> aicon_base.derivatives.derivative_processing
+aicon_base.derivatives.derivative_processing --> aicon_base.components.util
+aicon_base.derivatives.derivative_processing --> aicon_base.derivatives.derivative_maintenance
+aicon_base.inference.ekf --> aicon_base.inference.outlier_rejection
+aicon_base.inference.ekf --> aicon_base.inference.util
+aicon_base.inference.outlier_rejection --> aicon_base.inference.util
+aicon_base.middleware.python_sequential --> aicon_base.components.action_components
+aicon_base.middleware.python_sequential --> aicon_base.components.base_components
+aicon_base.middleware.python_sequential --> aicon_base.derivatives.derivative_maintenance
+aicon_base.middleware.python_sequential --> aicon_base.visualization.visualization_component
+aicon_base.visualization --> aicon_base.visualization.visualization_component
+aicon_base.visualization.network_graphs --> aicon_base.components.action_components
+aicon_base.visualization.network_graphs --> aicon_base.components.base_components
+aicon_base.visualization.network_graphs --> aicon_base.components.estimation_components
+aicon_base.visualization.network_graphs --> aicon_base.components.sensor_components
+aicon_base.visualization.network_graphs --> aicon_base.connections.connections
+aicon_base.visualization.visualization_component --> aicon_base.components.base_components
+aicon_base.visualization.visualization_component --> aicon_base.components.util
+aicon_base.visualization.visualization_component --> aicon_base.derivatives.derivative_processing
+aicon_base.visualization.visualization_component --> aicon_base.experiment_util.experiment_util
+aicon_base.visualization.visualization_component --> aicon_base.visualization.network_graphs
+@enduml

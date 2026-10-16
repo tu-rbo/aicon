@@ -1,83 +1,31 @@
 # Python
-**/__pycache__/
+__pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
 *.egg-info/
-.installed.cfg
-*.egg
-
-# Virtual Environment
-venv/
-env/
-ENV/
-.env
-.venv
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
-
-# ROS
 build/
-devel/
+dist/
+.pytest_cache/
+
+# Environments
+.venv/
+venv/
+.pixi/
+
+# colcon / ROS 2
 install/
-*.pyc
-*.pyo
-*.pdb
-*.so
-*.dylib
-*.dll
-*.exe
-*.out
-*.app
-
-# Jupyter Notebook
-.ipynb_checkpoints
-*.ipynb
-
-# Logs
-*.log
-logs/
 log/
 
-# Local development
-.env
-.env.local
-.env.*.local
+# Experiment outputs
+outputs/
 
-# Testing
+# Test and coverage reports (scripts/test.sh)
+reports/
 .coverage
 htmlcov/
-.pytest_cache/
-.tox/
 
-# Documentation
-docs/_build/
-site/
-
-# Distribution
-*.pdf
-.run/
-*.tar.gz
-*.zip
-
-# OS specific
+# Editors and OS files
+.vscode/
+.idea/
+*~
+*.swp
 .DS_Store
-Thumbs.db

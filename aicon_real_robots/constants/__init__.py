@@ -1,0 +1,48 @@
+"""
+Real-World Robots -- Useful Constants
+
+Author: Vito Mengers
+License: MIT
+"""
+
+__author__ = "Vito Mengers"
+__copyright__ = "Copyright 2025 RBO TU Berlin"
+__license__ = "MIT"
+__version__ = "1.0.0"
+
+import torch
+
+GRASPING_ORIENTATION_DRAWER = [
+    [0.78775502660914620279, -0.60557208427980546706, 0.11280278716873770595],
+    [-0.58955331840126945497, -0.79426986622265105531, -0.14684094923659105070],
+    [0.17851863436088305503, 0.04917143837294160602, -0.98270711141940014777],
+]
+RELATIVE_PREGRASPING_POINT_DRAWER = [0.02, -0.01, 0.175]
+RELATIVE_GRASPED_POINT_DRAWER = [0.005, -0.005, 0.155]
+LONGFINGER_POINT_Z = 0.14
+LONGFINGER_POINT_X = 0.05
+GRAVITY_ACC = 9.8067
+# FT SENSOR on RH3 Arm
+FT_COM_RH3 = [-0.0601, 0.0226, 0.0482]
+FT_BIAS_RH3 = [1.1357, -3.4731, 3.4818, -0.0476, 0.0229, 0.0568]
+FT_ROTATION_RH3 = [[-1, 0.0, 0.0], [0.0, -1, 0.0], [0.0, 0.0, 1.0]]
+EE_MASS_RH3 = 0.42
+# FT SENSOR on Pusher Arm
+FT_COM_PUSHER = [0.0020, 0.0020, 0.1293]
+FT_BIAS_PUSHER = [-2.8554, -0.4012, 1.0596, -0.01, 0.0655, 0.0064]
+FT_ROTATION_PUSHER = [[-0.70710361, -0.70710996, 0.0], [0.70710996, -0.70710361, 0.0], [0.0, 0.0, 1.0]]
+EE_MASS_PUSHER = 0.13
+
+PANDA_DH_A = [0.0, 0.0, 0.0, 0.0825, -0.0825, 0.0, 0.088, 0.0]
+PANDA_DH_D = [0.333, 0.0, 0.316, 0.0, 0.384, 0.0, 0.0, 0.107]
+PANDA_DH_ALPHA = [
+    0.0,
+    -torch.pi / 2.0,
+    torch.pi / 2.0,
+    torch.pi / 2.0,
+    -torch.pi / 2.0,
+    torch.pi / 2.0,
+    torch.pi / 2.0,
+    0,
+]
+NUM_BODY_POINTS: int = 19

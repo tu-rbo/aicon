@@ -1,0 +1,15 @@
+[flake8]
+per-file-ignores =
+    # imported but unused
+    __init__.py: F401
+
+exclude =
+    .git,
+    __pycache__,
+    .venv,
+
+max-complexity = 10
+max-line-length = 120
+# E203: whitespace before ':' in slices with expressions is PEP 8 conform (and what the formatter writes)
+# C901: several functions exceed the complexity limit; not enforced (see docs/coding-standards.md)
+extend-ignore = E203, C901
