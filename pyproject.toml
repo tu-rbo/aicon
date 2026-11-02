@@ -68,6 +68,8 @@ cu126 = ["torch>=2.3", "torchvision"]
 cu130 = ["torch>=2.3", "torchvision"]
 cu132 = ["torch>=2.3", "torchvision"]
 test = ["pytest"]
+# The AICON linter and language server in tools/aiconls (its dynamic check also needs torch and tensordict, see above)
+lint = ["libcst", "lsprotocol", "pygls", "PyYAML"]
 # Linters, formatters and coverage used by scripts/test.sh, scripts/refactor.sh and the CI (see docs/coding-standards.md)
 dev = ["pytest", "pylint", "flake8", "ruff", "coverage", "genbadge[coverage]"]
 
@@ -152,6 +154,8 @@ blocksworld = "python -m examples.blocksworld.run_experiment"
 nav2d = "python -m examples.nav_2d.run_experiment"
 pusht = "python -m examples.pusht.run_experiment"
 test = "pytest"
+# the linter in tools/aiconls (lint extra), e.g. pixi run lint examples/nav_2d
+lint = "python tools/aiconls/src/aiconls.py scan"
 
 # ROS 2 Humble from RoboStack, for the real-robot examples and the multi-process ROS middleware.
 [tool.pixi.feature.ros]
@@ -213,8 +217,8 @@ extra-index-urls = ["https://download.pytorch.org/whl/cu126"]
 index-strategy = "unsafe-best-match"
 
 [tool.pixi.environments]
-default = { features = ["pusht", "nav2d", "video", "test"], solve-group = "default" }
-cpu = { features = ["pusht", "nav2d", "video", "test", "torch-cpu"] }
+default = { features = ["pusht", "nav2d", "video", "test", "lint"], solve-group = "default" }
+cpu = { features = ["pusht", "nav2d", "video", "test", "lint", "torch-cpu"] }
 robosuite = { features = ["robosuite", "test"] }
 ros = { features = ["ros", "test"] }
 ros-cu126 = { features = ["ros", "test", "torch-cu126"] }

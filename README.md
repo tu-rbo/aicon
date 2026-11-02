@@ -95,12 +95,12 @@ for i in range(n_ticks):
 
 or, with ROS 2, one process per component (`build_components_with_ros_middleware` in `aicon_ros`).
 
-**Linter (coming soon).** AICONLS, a linter and language server for AICON by Ole Liebich, checks the code of a system
-against a `spec.yaml` that describes its graph: the components with their quantities, the connections between them and
-the goals. It catches, for example, quantities with the wrong shape and connections whose gradients vanish. Each example
-directory already has its `spec.yaml` (estimates with a covariance are marked as `Gaussian`);
-`python -m examples.spec_files` regenerates them from the experiment specifications, and
-`aicon_base.experiment_util.spec_yaml` writes one for your own system.
+**Linter.** AICONLS, a linter and language server for AICON by Ole Liebich, checks the code of a system against a
+`spec.yaml` that describes its graph: the components with their quantities, the connections between them and the
+goals. It catches, for example, quantities with the wrong shape and connections whose gradients vanish. Each example
+directory has its `spec.yaml` (estimates with a covariance are marked as `Gaussian`); `python -m examples.spec_files`
+regenerates them from the experiment specifications, and `aicon_base.experiment_util.spec_yaml` writes one for your own
+system. The linter and a VS Code extension for it are in [`tools/`](tools/README.md).
 
 ## Installation
 

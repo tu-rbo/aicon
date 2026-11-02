@@ -315,9 +315,9 @@ class ObjectvsPush2InteractionlikelihoodSim(ActiveInterconnection):
         super().__init__(
             name,
             {
-                "object_position": (NUM_KEYPOINTS, 2),
+                "object_position": (3,),
                 "pusher_point": (2,),
-                "interaction_likelihood": (NUM_KEYPOINTS, 2),
+                "interaction_likelihood": (1,),
             },
             dtype=dtype,
             device=device,

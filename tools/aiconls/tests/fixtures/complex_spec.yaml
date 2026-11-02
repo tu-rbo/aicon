@@ -1,0 +1,38 @@
+components:
+  EEPoseSensor:
+    component_type: Sensor
+    dtype: float64
+    quantities:
+      pose_ee:
+        shape: (6,)
+      uncertainty_ee:
+        shape: (6, 6)
+
+  DrawerPoseEstimator:
+    component_type: Estimator
+    goals: [DrawerOpenViaJointGoal]
+    quantities:
+      position_drawer:
+        shape: (3,)
+      uncertainty_drawer:
+        shape: (3, 3)
+
+  VeloEEAction:
+    component_type: Action
+    dtype: float32
+    goals: [safetyGoal]
+    quantities:
+      action_velo_ee:
+        shape: (3,)
+
+goals:
+  drawerOpeningGoal:
+    class_name: DrawerOpenViaJointGoal
+  safetyGoal:
+    class_name: KeepEEInWorkspaceGoal
+
+connections:
+  eeDrawerDistance:
+    components: [EEPoseSensor, DrawerPoseEstimator]
+  eeControlLoop:
+    components: [VeloEEAction, EEPoseSensor, DrawerPoseEstimator]

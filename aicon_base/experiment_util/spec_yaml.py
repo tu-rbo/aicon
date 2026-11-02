@@ -28,14 +28,38 @@ from aicon_base.components import ActionComponent, EstimationComponent, SensorCo
 COMPONENT_TYPES = ((SensorComponent, "Sensor"), (ActionComponent, "Action"), (EstimationComponent, "Estimator"))
 
 
-def graph_spec(component_builders: Dict[str, Callable], goal_variants: Iterable[Dict[str, Callable]] = ()) -> Dict:
+def graph_spec(
+    component_builders: Dict[str, Callable],
+    goal_variants: Iterable[Dict[str, Callable]] = (),
+    routing_by_name: bool = False,
+    graph_variants: Iterable[Dict[str, Callable]] = (),
+) -> Dict:
     """The graph built by `component_builders` as the content of a spec.yaml: components, goals and connections, each
     in the order in which they first appear. `goal_variants` are component builders of the same graph with other
     goals (e.g. one per goal an experiment can be run with); their goals are listed too, but not attached. Components
     that are neither sensors, actions nor estimators (e.g. visualizers) have no type in a spec; they are only named
-    under "omitted"."""
-    components, goals, connections, omitted = {}, {}, {}, {}
-    for name, build in component_builders.items():
+    under "omitted".
+
+    A connection lists the components that hold it. With `routing_by_name` (the ROS middleware, where every quantity
+    is a topic of its own), it also lists the components owning one of its quantities, as these reach it too.
+    `graph_variants` are component builders of other configurations of the same graph (e.g. with a different sensor);
+    their components and connections are added, so that the spec covers all of them."""
+    components, goals, connections, omitted, declared = {}, {}, {}, {}, {}
+    all_builders = [
+        (name, build) for builders in (component_builders, *graph_variants) for name, build in builders.items()
+    ]
+    for name, build in all_builders:
+        if name in components or name in omitted:
+            # the same component in another configuration: only its connections can differ
+            component = build(True)
+            for connection_name, connection in component.connections.items():
+                entry = connections.setdefault(
+                    connection_name, {"class_name": type(connection).__name__, "components": []}
+                )
+                if name not in entry["components"]:
+                    entry["components"].append(name)
+                declared.setdefault(connection_name, set(connection.connected_quantities.keys()))
+            continue
         component = build(True)
         component_type = next((t for cls, t in COMPONENT_TYPES if isinstance(component, cls)), None)
         if component_type is None:
@@ -53,6 +77,12 @@ def graph_spec(component_builders: Dict[str, Callable], goal_variants: Iterable[
         for connection_name, connection in component.connections.items():
             entry = connections.setdefault(connection_name, {"class_name": type(connection).__name__, "components": []})
             entry["components"].append(name)
+            declared.setdefault(connection_name, set(connection.connected_quantities.keys()))
+    if routing_by_name:
+        for connection_name, entry in connections.items():
+            for name, c in components.items():
+                if name not in entry["components"] and declared[connection_name] & set(c["quantities"]):
+                    entry["components"].append(name)
     for builders in goal_variants:
         for build in builders.values():
             for goal_name, goal in build(True).goals.items():
@@ -88,7 +118,8 @@ def _name(name: str) -> str:
 
 
 def _shape(shape: Tuple[int, ...]) -> str:
-    shape = tuple(int(s) for s in shape)
+    # a dimension that is empty in the mock build (e.g. a number of tracked points) has a variable size: -1
+    shape = tuple(int(s) if int(s) != 0 else -1 for s in shape)
     return "(" + ", ".join(str(s) for s in shape) + ("," if len(shape) == 1 else "") + ")"
 
 

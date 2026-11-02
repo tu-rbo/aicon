@@ -23,7 +23,7 @@ components:
     dtype: float64
     quantities:
       target_meas:
-        shape: (1,)
+        shape: (2,)
   ObstacleImageSensor:
     component_type: Sensor
     class_name: ObstacleImageSensor

@@ -1,0 +1,7 @@
+.venv
+
+**/__pycache__/
+.github/instructions
+/build/lib
+/src/aiconls.egg-info
+/uv.lock

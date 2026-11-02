@@ -17,8 +17,16 @@ jobs:
       # robosuite's renderer imports libGL / libEGL even when nothing is rendered
       - run: sudo apt-get -qq update && sudo apt-get -qq install -y libgl1 libegl1
       - run: pip install torch --index-url https://download.pytorch.org/whl/cpu
-      - run: pip install -e ".[test,dev,pusht,nav2d,robosuite]"
-      - run: ruff format --check $(git ls-files '*.py')
-      - run: pylint $(git ls-files '*.py')
-      - run: flake8 $(git ls-files '*.py')
+      - run: pip install -e ".[test,dev,pusht,nav2d,robosuite,lint]"
+      - run: ruff format --check $(git ls-files '*.py' ':!tools')
+      - run: pylint $(git ls-files '*.py' ':!tools')
+      - run: flake8 $(git ls-files '*.py' ':!tools')
       - run: pytest --durations=10 --maxfail=2
+      # the linter in tools/aiconls: its own tests, then every example against its spec.yaml (without ROS, the
+      # dynamic check skips the components that need it, with a warning)
+      - run: pytest -q
+        working-directory: tools/aiconls
+      - run: |
+          for spec in $(git ls-files 'examples/*spec.yaml'); do
+            python tools/aiconls/src/aiconls.py scan "$(dirname "$spec")" --dynamic --fail-on error --color never || exit 1
+          done

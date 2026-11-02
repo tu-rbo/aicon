@@ -1,0 +1,63 @@
+[project]
+name = "aiconls"
+version = "0.0.71"
+authors = [
+  { name="Ole Liebich", email="ole.liebich@campus.tu-berlin.de" },
+]
+description = "This is a language server for the AICON Framework"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "libcst",
+    "lsprotocol",
+    "pygls",
+    "PyYAML"
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+]
+# part of the AICON repository and covered by its MIT license (LICENSE.md at its root)
+license = "MIT"
+
+[project.optional-dependencies]
+# the dynamic check additionally needs the AICON framework (aicon_base) in the environment
+dynamic = ["torch", "tensordict"]
+test = ["pytest"]
+
+[project.scripts]
+aiconls = "aiconls:main"
+
+[project.urls]
+Homepage = "https://git.tu-berlin.de/ole_l/aiconls"
+Issues = "https://github.com/tu-rbo/aicon/issues"
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+# [tool.setuptools.packages.find]
+# whe
+
+[tool.vulture]
+exclude = [".venv/"]
+ignore_names = ["visit_*", "do_*"]
+sort_by_size = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+markers = [
+  "integration: tests that exercise the parser/validator flow end to end",
+]
+strict = true
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "strict"
+extraPaths = ["src", "../../aicon"]
+
+reportUnusedImport = "warning"
+reportUnusedVariable = "warning"
+reportUnusedFunction = "warning"
+reportUnusedClass = "warning"

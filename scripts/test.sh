@@ -36,9 +36,9 @@ function error-invalid-option() {
 # Enforce coding style with pylint and flake8
 function test_coding_style() {
     echo -e "${YELLOW}Testing coding style ...${NC}"
-    ruff format --check $(git ls-files '*.py')
-    pylint -j=0 $(git ls-files '*.py')
-    flake8 $(git ls-files '*.py')
+    ruff format --check $(git ls-files '*.py' ':!tools')
+    pylint -j=0 $(git ls-files '*.py' ':!tools')
+    flake8 $(git ls-files '*.py' ':!tools')
 }
 
 # Run pytest, coverage check, save reports and badges

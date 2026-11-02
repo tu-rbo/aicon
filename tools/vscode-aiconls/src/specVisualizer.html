@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-__AICONLS_SPEC_VIS_NONCE__';">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spec Visualizer</title>
+  <style>
+    body { margin: 0; font-family: var(--vscode-font-family); color: var(--vscode-foreground); background: var(--vscode-editor-background); }
+    .root { display: grid; grid-template-columns: minmax(420px, 1fr) 360px; height: 100vh; }
+    .root.details-hidden { grid-template-columns: minmax(420px, 1fr) 0; }
+    .graph-pane { display: flex; flex-direction: column; border-right: 1px solid var(--vscode-panel-border); }
+    .root.details-hidden .graph-pane { border-right: none; }
+    .root.details-hidden .details { display: none; }
+    .toolbar { padding: 10px; display: flex; gap: 8px; align-items: center; border-bottom: 1px solid var(--vscode-panel-border); flex-wrap: wrap; }
+    .toolbar button, .details button { background: var(--vscode-button-background); color: var(--vscode-button-foreground); border: none; padding: 6px 10px; cursor: pointer; border-radius: 4px; }
+    .toolbar button:hover, .details button:hover { background: var(--vscode-button-hoverBackground); }
+    .toolbar button.secondary, .details button.secondary { background: var(--vscode-button-secondaryBackground); color: var(--vscode-button-secondaryForeground); }
+    .toolbar button.secondary:hover, .details button.secondary:hover { background: var(--vscode-button-secondaryHoverBackground); }
+    .toolbar input, .toolbar select { background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); border-radius: 4px; padding: 6px 8px; min-width: 120px; }
+    .layout-controls { width: 100%; display: grid; grid-template-columns: repeat(4, minmax(110px, 1fr)); gap: 6px; font-size: 12px; align-items: end; }
+    .layout-controls.collapsed { display: none; }
+    .layout-controls label { display: flex; flex-direction: column; gap: 4px; }
+    .legend { font-size: 12px; opacity: 0.9; display: flex; gap: 8px; flex-wrap: wrap; }
+    .legend span { display: inline-flex; align-items: center; gap: 4px; }
+    .dot { width: 10px; height: 10px; border-radius: 999px; display: inline-block; }
+    .dot.component { background: #4fc3f7; }
+    .dot.component-sensor { background: #fdd835; }
+    .dot.component-action { background: #fdd835; }
+    .dot.component-estimator { background: #42a5f5; }
+    .dot.component-goal { background: #ef5350; }
+    .dot.component-unknown { background: #90a4ae; }
+    .dot.connection { background: #a5d6a7; }
+    .dot.goal { background: #ef5350; }
+    .canvas { width: 100%; height: 100%; min-height: 400px; }
+    .details { padding: 12px; overflow: auto; }
+    .details textarea { width: 100%; min-height: 220px; box-sizing: border-box; background: var(--vscode-input-background); color: var(--vscode-input-foreground); border: 1px solid var(--vscode-input-border); border-radius: 4px; padding: 8px; font-family: var(--vscode-editor-font-family, monospace); font-size: 12px; }
+    .diag { margin-top: 8px; font-size: 12px; color: var(--vscode-errorForeground); white-space: pre-wrap; }
+    .status { margin-top: 8px; font-size: 12px; min-height: 1.2em; }
+    .node-label { font-size: 12px; pointer-events: none; user-select: none; fill: var(--vscode-editor-foreground); }
+    .edge { fill: none; stroke-width: 1.5; opacity: 0.35; }
+    .edge.connection-component { stroke: #80cbc4; }
+    .edge.component-goal { stroke: #ef9a9a; }
+    .edge.active { opacity: 1; stroke-width: 2.5; }
+    .node .node-shape { stroke: transparent; stroke-width: 2; }
+    .node.component .node-shape { fill: #4fc3f7; }
+    .node.component.component-type-sensor .node-shape { fill: #fdd835; }
+    .node.component.component-type-action circle { fill: #fdd835; }
+    .node.component.component-type-estimator .node-shape { fill: #42a5f5; }
+    .node.component.component-type-goal circle { fill: #ef5350; }
+    .node.component.component-type-unknown circle { fill: #90a4ae; }
+    .node.connection .node-shape { fill: #66bb6a; }
+    .node.goal .node-shape { fill: #ef5350; }
+    .node.selected .node-shape { stroke: #ffffff; }
+    .node.muted { opacity: 0.2; }
+    .edge.muted { opacity: 0.08; }
+    .action-row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <div class="root">
+    <div class="graph-pane">
+      <div class="toolbar">
+        <button id="refresh">Refresh</button>
+        <button id="recalc-layout" class="secondary">Recalculate layout</button>
+        <button id="toggle-layout-options" class="secondary">Show layout options</button>
+        <div class="layout-controls">
+          <label>Algorithm
+            <select id="layout-algorithm">
+              <option value="stress">Stress</option>
+              <option value="force">Force</option>
+              <option value="layered">Layered</option>
+              <option value="radial">Radial</option>
+              <option value="mrtree">MrTree</option>
+            </select>
+          </label>
+          <label>Direction
+            <select id="layout-direction">
+              <option value="RIGHT">Right</option>
+              <option value="LEFT">Left</option>
+              <option value="DOWN">Down</option>
+              <option value="UP">Up</option>
+            </select>
+          </label>
+          <label>Edge routing
+            <select id="layout-edge-routing">
+              <option value="POLYLINE">Polyline</option>
+              <option value="ORTHOGONAL">Orthogonal</option>
+              <option value="SPLINES">Splines</option>
+            </select>
+          </label>
+          <label>Node spacing
+            <input id="layout-node-spacing" type="number" min="20" max="500" step="5" />
+          </label>
+          <label>Edge-node spacing
+            <input id="layout-edge-node-spacing" type="number" min="10" max="300" step="5" />
+          </label>
+          <label>Layer spacing
+            <input id="layout-layer-spacing" type="number" min="20" max="500" step="5" />
+          </label>
+          <label>Stress iterations
+            <input id="layout-stress-iterations" type="number" min="200" max="8000" step="100" />
+          </label>
+          <label>Force iterations
+            <input id="layout-force-iterations" type="number" min="100" max="8000" step="100" />
+          </label>
+          <label>Force repulsive
+            <input id="layout-force-repulsive" type="number" min="0.1" max="10" step="0.1" />
+          </label>
+          <label>Radial compaction
+            <select id="layout-radial-compaction">
+              <option value="true">On</option>
+              <option value="false">Off</option>
+            </select>
+          </label>
+        </div>
+        <input id="new-component-name" placeholder="Component name" />
+        <button id="add-component" class="secondary">+ Component</button>
+        <input id="new-connection-name" placeholder="Connection name" />
+        <button id="add-connection" class="secondary">+ Connection</button>
+        <div class="legend">
+          <span><i class="dot component"></i>Component</span>
+          <span><i class="dot component-sensor"></i>Sensor</span>
+          <span><i class="dot component-action"></i>Action</span>
+          <span><i class="dot component-estimator"></i>Estimator</span>
+          <span><i class="dot component-goal"></i>Goal-component</span>
+          <span><i class="dot connection"></i>Interconnection</span>
+          <span><i class="dot goal"></i>Goal</span>
+        </div>
+      </div>
+      <svg id="canvas" class="canvas"></svg>
+    </div>
+    <div class="details">
+      <h3 style="margin-top: 0;">Details</h3>
+      <div id="meta"></div>
+      <div id="selected-name" style="margin-top: 6px; font-size: 12px; opacity: 0.9;"></div>
+      <textarea id="editor" spellcheck="false"></textarea>
+      <div class="action-row">
+        <button id="save-properties">Save properties</button>
+        <button id="delete-node" class="secondary">Delete selected</button>
+      </div>
+      <div id="status" class="status"></div>
+      <div id="diagnostics" class="diag"></div>
+    </div>
+  </div>
+
+  <script nonce="__AICONLS_SPEC_VIS_NONCE__">
+    const vscode = acquireVsCodeApi();
+    const initialData = __AICONLS_SPEC_VIS_INITIAL_DATA__;
+    const root = document.querySelector(".root");
+    const canvas = document.getElementById("canvas");
+    const editor = document.getElementById("editor");
+    const meta = document.getElementById("meta");
+    const diagnostics = document.getElementById("diagnostics");
+    const refreshButton = document.getElementById("refresh");
+    const recalcLayoutButton = document.getElementById("recalc-layout");
+    const saveButton = document.getElementById("save-properties");
+    const deleteButton = document.getElementById("delete-node");
+    const selectedName = document.getElementById("selected-name");
+    const addComponentButton = document.getElementById("add-component");
+    const addConnectionButton = document.getElementById("add-connection");
+    const newComponentNameInput = document.getElementById("new-component-name");
+    const newConnectionNameInput = document.getElementById("new-connection-name");
+    const toggleLayoutOptionsButton = document.getElementById("toggle-layout-options");
+    const layoutControls = document.querySelector(".layout-controls");
+    const layoutAlgorithmSelect = document.getElementById("layout-algorithm");
+    const layoutDirectionSelect = document.getElementById("layout-direction");
+    const layoutEdgeRoutingSelect = document.getElementById("layout-edge-routing");
+    const layoutNodeSpacingInput = document.getElementById("layout-node-spacing");
+    const layoutEdgeNodeSpacingInput = document.getElementById("layout-edge-node-spacing");
+    const layoutLayerSpacingInput = document.getElementById("layout-layer-spacing");
+    const layoutStressIterationsInput = document.getElementById("layout-stress-iterations");
+    const layoutForceIterationsInput = document.getElementById("layout-force-iterations");
+    const layoutForceRepulsiveInput = document.getElementById("layout-force-repulsive");
+    const layoutRadialCompactionSelect = document.getElementById("layout-radial-compaction");
+    const status = document.getElementById("status");
+
+    const fallbackColumn = { connection: 0, component: 1, goal: 2 };
+    let data = initialData;
+    let selectedId = null;
+    let draggingId = null;
+    let isPanning = false;
+    let panPointerId = null;
+    let panningMoved = false;
+    let viewScale = 1;
+    let viewOffsetX = 0;
+    let viewOffsetY = 0;
+    let layoutOptionsCollapsed = true;
+    const MIN_VIEW_SCALE = 0.05;
+    const MAX_VIEW_SCALE = 4;
+
+    function setLayoutOptionsCollapsed(nextCollapsed) {
+      layoutOptionsCollapsed = nextCollapsed;
+      if (layoutOptionsCollapsed) {
+        layoutControls.classList.add("collapsed");
+        toggleLayoutOptionsButton.textContent = "Show layout options";
+        return;
+      }
+      layoutControls.classList.remove("collapsed");
+      toggleLayoutOptionsButton.textContent = "Hide layout options";
+    }
+
+    function applyLayoutConfigToInputs(layoutConfig) {
+      layoutAlgorithmSelect.value = layoutConfig.algorithm;
+      layoutDirectionSelect.value = layoutConfig.direction;
+      layoutEdgeRoutingSelect.value = layoutConfig.edgeRouting;
+      layoutNodeSpacingInput.value = String(layoutConfig.nodeSpacing);
+      layoutEdgeNodeSpacingInput.value = String(layoutConfig.edgeNodeSpacing);
+      layoutLayerSpacingInput.value = String(layoutConfig.layerSpacing);
+      layoutStressIterationsInput.value = String(layoutConfig.stressIterationLimit);
+      layoutForceIterationsInput.value = String(layoutConfig.forceIterations);
+      layoutForceRepulsiveInput.value = String(layoutConfig.forceRepulsivePower);
+      layoutRadialCompactionSelect.value = String(layoutConfig.radialCompaction);
+      updateLayoutInputState();
+    }
+
+    function getLayoutConfigFromInputs() {
+      return {
+        algorithm: layoutAlgorithmSelect.value,
+        direction: layoutDirectionSelect.value,
+        edgeRouting: layoutEdgeRoutingSelect.value,
+        nodeSpacing: Number(layoutNodeSpacingInput.value),
+        edgeNodeSpacing: Number(layoutEdgeNodeSpacingInput.value),
+        layerSpacing: Number(layoutLayerSpacingInput.value),
+        stressIterationLimit: Number(layoutStressIterationsInput.value),
+        forceIterations: Number(layoutForceIterationsInput.value),
+        forceRepulsivePower: Number(layoutForceRepulsiveInput.value),
+        radialCompaction: layoutRadialCompactionSelect.value === "true",
+      };
+    }
+
+    function updateLayoutInputState() {
+      const algorithm = layoutAlgorithmSelect.value;
+      const isLayered = algorithm === "layered";
+      const isForce = algorithm === "force";
+      const isStress = algorithm === "stress";
+      const isRadial = algorithm === "radial";
+      layoutDirectionSelect.disabled = !isLayered;
+      layoutLayerSpacingInput.disabled = !isLayered;
+      layoutForceIterationsInput.disabled = !isForce;
+      layoutForceRepulsiveInput.disabled = !isForce;
+      layoutStressIterationsInput.disabled = !isStress;
+      layoutRadialCompactionSelect.disabled = !isRadial;
+    }
+
+    function withLayout(input) {
+      const width = canvas.clientWidth || 900;
+      const positioned = new Map();
+      const perKindCount = { connection: 0, component: 0, goal: 0 };
+      for (const node of input.nodes) {
+        const fallbackX = 120 + fallbackColumn[node.kind] * 280;
+        const fallbackY = 100 + perKindCount[node.kind] * 90;
+        perKindCount[node.kind] += 1;
+        positioned.set(node.id, {
+          ...node,
+          x: typeof node.position?.x === "number" ? node.position.x : Math.min(fallbackX, width - 60),
+          y: typeof node.position?.y === "number" ? node.position.y : fallbackY,
+        });
+      }
+      return positioned;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#39;");
+    }
+
+    function toComponentTypeClass(node) {
+      if (node.kind !== "component") {
+        return "";
+      }
+      const rawType = node?.details?.component_type;
+      if (typeof rawType !== "string") {
+        return "component-type-unknown";
+      }
+      const normalized = rawType.trim().toLowerCase().replaceAll(/[^a-z0-9_-]/g, "-");
+      if (!normalized) {
+        return "component-type-unknown";
+      }
+      return "component-type-" + normalized;
+    }
+
+    function getNodeShapeMarkup(node, screen) {
+      if (node.kind === "connection") {
+        return '<rect class="node-shape" x="' + (screen.x - 14) + '" y="' + (screen.y - 10)
+          + '" width="28" height="20" rx="6" ry="6"></rect>';
+      }
+      if (node.kind === "goal") {
+        return '<polygon class="node-shape" points="'
+          + screen.x + " " + (screen.y - 14) + " "
+          + (screen.x + 14) + " " + screen.y + " "
+          + screen.x + " " + (screen.y + 14) + " "
+          + (screen.x - 14) + " " + screen.y
+          + '"></polygon>';
+      }
+      return '<circle class="node-shape" cx="' + screen.x + '" cy="' + screen.y + '" r="12"></circle>';
+    }
+
+    let positionedNodes = withLayout(data);
+
+    function setStatus(message, isError) {
+      status.textContent = message || "";
+      status.style.color = isError ? "var(--vscode-errorForeground)" : "var(--vscode-descriptionForeground)";
+    }
+
+    function setDetails(node) {
+      if (root) {
+        if (node) {
+          root.classList.remove("details-hidden");
+        } else {
+          root.classList.add("details-hidden");
+        }
+      }
+      meta.textContent = "Spec: " + data.specPath;
+      if (!node) {
+        selectedName.textContent = "No node selected";
+        editor.value = "Select a node to edit its properties.";
+        editor.disabled = true;
+        saveButton.disabled = true;
+        deleteButton.disabled = true;
+      } else {
+        selectedName.textContent = "Selected: " + node.id;
+        editor.value = JSON.stringify(node.details, null, 2);
+        editor.disabled = false;
+        saveButton.disabled = false;
+        deleteButton.disabled = !(node.kind === "component" || node.kind === "connection");
+      }
+      diagnostics.textContent = data.diagnostics.length
+        ? data.diagnostics.map((entry) => "• " + entry).join("\\n")
+        : "";
+    }
+
+    function getConnectedSet(nodeId) {
+      if (!nodeId) {
+        return { nodes: new Set(), edges: new Set() };
+      }
+      const nodes = new Set([nodeId]);
+      const edges = new Set();
+      for (const edge of data.edges) {
+        if (edge.source === nodeId || edge.target === nodeId) {
+          edges.add(edge.id);
+          nodes.add(edge.source);
+          nodes.add(edge.target);
+        }
+      }
+      return { nodes, edges };
+    }
+
+    function toSvgPoint(evt) {
+      const pt = canvas.createSVGPoint();
+      pt.x = evt.clientX;
+      pt.y = evt.clientY;
+      const ctm = canvas.getScreenCTM();
+      if (!ctm) {
+        return { x: evt.offsetX, y: evt.offsetY };
+      }
+      return pt.matrixTransform(ctm.inverse());
+    }
+
+    function worldToScreen(point) {
+      return {
+        x: (point.x + viewOffsetX) * viewScale,
+        y: (point.y + viewOffsetY) * viewScale,
+      };
+    }
+
+    function screenToWorld(point) {
+      return {
+        x: point.x / viewScale - viewOffsetX,
+        y: point.y / viewScale - viewOffsetY,
+      };
+    }
+
+    function buildEdgeIndexMaps(nodesArray) {
+      const nodeMap = new Map(nodesArray.map((entry) => [entry.id, entry]));
+      const outgoing = new Map();
+      const incoming = new Map();
+
+      for (const edge of data.edges) {
+        const source = nodeMap.get(edge.source);
+        const target = nodeMap.get(edge.target);
+        if (!source || !target) {
+          continue;
+        }
+        if (!outgoing.has(edge.source)) {
+          outgoing.set(edge.source, []);
+        }
+        if (!incoming.has(edge.target)) {
+          incoming.set(edge.target, []);
+        }
+        outgoing.get(edge.source).push(edge);
+        incoming.get(edge.target).push(edge);
+      }
+
+      for (const [sourceId, edgeList] of outgoing.entries()) {
+        const source = nodeMap.get(sourceId);
+        edgeList.sort((a, b) => {
+          const ay = nodeMap.get(a.target)?.y ?? 0;
+          const by = nodeMap.get(b.target)?.y ?? 0;
+          if (ay !== by) {
+            return ay - by;
+          }
+          return a.id.localeCompare(b.id);
+        });
+        if (!source) {
+          continue;
+        }
+      }
+
+      for (const [targetId, edgeList] of incoming.entries()) {
+        edgeList.sort((a, b) => {
+          const ax = nodeMap.get(a.source)?.y ?? 0;
+          const bx = nodeMap.get(b.source)?.y ?? 0;
+          if (ax !== bx) {
+            return ax - bx;
+          }
+          return a.id.localeCompare(b.id);
+        });
+        if (!nodeMap.get(targetId)) {
+          continue;
+        }
+      }
+
+      const edgeIndices = new Map();
+      for (const edge of data.edges) {
+        const outList = outgoing.get(edge.source) ?? [];
+        const inList = incoming.get(edge.target) ?? [];
+        edgeIndices.set(edge.id, {
+          outIndex: outList.findIndex((entry) => entry.id === edge.id),
+          outCount: outList.length,
+          inIndex: inList.findIndex((entry) => entry.id === edge.id),
+          inCount: inList.length,
+        });
+      }
+      return edgeIndices;
+    }
+
+    function draw() {
+      const width = canvas.clientWidth || 900;
+      const height = Math.max(canvas.clientHeight || 520, 520);
+      canvas.setAttribute("viewBox", "0 0 " + width + " " + height);
+      const connected = getConnectedSet(selectedId);
+
+      const nodesArray = Array.from(positionedNodes.values());
+      const nodeMap = new Map(nodesArray.map((entry) => [entry.id, entry]));
+      const edgeIndices = buildEdgeIndexMaps(nodesArray);
+      const edgeElements = data.edges
+        .map((edge) => {
+          const source = nodeMap.get(edge.source);
+          const target = nodeMap.get(edge.target);
+          if (!source || !target) {
+            return "";
+          }
+          const active = connected.edges.has(edge.id) ? "active" : "";
+          const muted = selectedId && !connected.edges.has(edge.id) ? "muted" : "";
+          const sourceScreen = worldToScreen(source);
+          const targetScreen = worldToScreen(target);
+          const indexInfo = edgeIndices.get(edge.id) ?? {
+            outIndex: 0,
+            outCount: 1,
+            inIndex: 0,
+            inCount: 1,
+          };
+          const outDelta = indexInfo.outIndex - (indexInfo.outCount - 1) / 2;
+          const inDelta = indexInfo.inIndex - (indexInfo.inCount - 1) / 2;
+          const bend = (outDelta + inDelta) * 16;
+          const controlX = (sourceScreen.x + targetScreen.x) / 2;
+          const controlY = (sourceScreen.y + targetScreen.y) / 2 + bend;
+          return '<path class="edge ' + edge.kind + " " + active + " " + muted + '" d="M '
+            + sourceScreen.x + " " + sourceScreen.y
+            + " Q " + controlX + " " + controlY
+            + " " + targetScreen.x + " " + targetScreen.y
+            + '"></path>';
+        })
+        .join("");
+
+      const nodeElements = nodesArray
+        .map((node) => {
+          const selected = node.id === selectedId ? "selected" : "";
+          const muted = selectedId && !connected.nodes.has(node.id) ? "muted" : "";
+          const componentTypeClass = toComponentTypeClass(node);
+          const screen = worldToScreen(node);
+          return '<g class="node ' + node.kind + " " + componentTypeClass + " " + selected + " " + muted + '" data-node-id="' + escapeHtml(node.id) + '" style="cursor: pointer;">'
+            + getNodeShapeMarkup(node, screen)
+            + '<text class="node-label" x="' + (screen.x + 16) + '" y="' + (screen.y + 4) + '">' + escapeHtml(node.label) + "</text>"
+            + "</g>";
+        })
+        .join("");
+
+      canvas.innerHTML = edgeElements + nodeElements;
+
+      for (const nodeElement of canvas.querySelectorAll("[data-node-id]")) {
+        nodeElement.addEventListener("click", () => {
+          const nodeId = nodeElement.getAttribute("data-node-id");
+          selectedId = nodeId;
+          const selectedNode = nodeId ? positionedNodes.get(nodeId) : null;
+          setDetails(selectedNode);
+          setStatus("", false);
+          draw();
+        });
+        nodeElement.addEventListener("pointerdown", (evt) => {
+          const nodeId = nodeElement.getAttribute("data-node-id");
+          if (!nodeId) {
+            return;
+          }
+          draggingId = nodeId;
+          evt.preventDefault();
+        });
+      }
+    }
+
+    canvas.addEventListener("pointermove", (evt) => {
+      if (isPanning) {
+        const movementX = evt.movementX || 0;
+        const movementY = evt.movementY || 0;
+        if (movementX !== 0 || movementY !== 0) {
+          panningMoved = true;
+        }
+        viewOffsetX += movementX / viewScale;
+        viewOffsetY += movementY / viewScale;
+        draw();
+        return;
+      }
+      if (!draggingId) {
+        return;
+      }
+      const node = positionedNodes.get(draggingId);
+      if (!node) {
+        return;
+      }
+      const pt = toSvgPoint(evt);
+      const world = screenToWorld(pt);
+      node.x = world.x;
+      node.y = world.y;
+      draw();
+    });
+    window.addEventListener("pointerup", () => {
+      draggingId = null;
+      isPanning = false;
+      panPointerId = null;
+    });
+    canvas.addEventListener("pointerdown", (evt) => {
+      const target = evt.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+      if (target.closest("[data-node-id]")) {
+        return;
+      }
+      isPanning = true;
+      panningMoved = false;
+      panPointerId = evt.pointerId;
+      canvas.setPointerCapture(evt.pointerId);
+      evt.preventDefault();
+    });
+    canvas.addEventListener("click", (evt) => {
+      const target = evt.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+      if (target.closest("[data-node-id]")) {
+        return;
+      }
+      if (panningMoved) {
+        panningMoved = false;
+        return;
+      }
+      selectedId = null;
+      setDetails(null);
+      setStatus("", false);
+      draw();
+    });
+    canvas.addEventListener("wheel", (evt) => {
+      evt.preventDefault();
+      const pt = toSvgPoint(evt);
+      const before = screenToWorld(pt);
+      const zoomFactor = evt.deltaY < 0 ? 1.1 : 0.9;
+      const nextScale = Math.min(MAX_VIEW_SCALE, Math.max(MIN_VIEW_SCALE, viewScale * zoomFactor));
+      if (nextScale === viewScale) {
+        return;
+      }
+      viewScale = nextScale;
+      viewOffsetX = pt.x / viewScale - before.x;
+      viewOffsetY = pt.y / viewScale - before.y;
+      draw();
+    }, { passive: false });
+
+    refreshButton.addEventListener("click", () => {
+      vscode.postMessage({ type: "refresh" });
+      setStatus("Refreshing…", false);
+    });
+    recalcLayoutButton.addEventListener("click", () => {
+      vscode.postMessage({
+        type: "recalculateLayout",
+        layoutConfig: getLayoutConfigFromInputs(),
+      });
+      setStatus("Recalculating layout…", false);
+    });
+    layoutAlgorithmSelect.addEventListener("change", () => {
+      updateLayoutInputState();
+    });
+
+    saveButton.addEventListener("click", () => {
+      if (!selectedId) {
+        return;
+      }
+      let parsed;
+      try {
+        parsed = JSON.parse(editor.value);
+      } catch (error) {
+        setStatus("Properties must be valid JSON.", true);
+        return;
+      }
+      vscode.postMessage({
+        type: "saveNode",
+        nodeId: selectedId,
+        properties: parsed,
+      });
+      setStatus("Saving…", false);
+    });
+
+    deleteButton.addEventListener("click", () => {
+      if (!selectedId) {
+        return;
+      }
+      const selectedNode = positionedNodes.get(selectedId);
+      if (!selectedNode || (selectedNode.kind !== "component" && selectedNode.kind !== "connection")) {
+        return;
+      }
+      vscode.postMessage({
+        type: "deleteNode",
+        nodeId: selectedId,
+      });
+      setStatus("Deleting…", false);
+    });
+
+    addComponentButton.addEventListener("click", () => {
+      const name = newComponentNameInput.value.trim();
+      if (!name) {
+        setStatus("Enter a component name first.", true);
+        return;
+      }
+      vscode.postMessage({
+        type: "createComponent",
+        name,
+      });
+      newComponentNameInput.value = "";
+      setStatus("Creating component…", false);
+    });
+
+    addConnectionButton.addEventListener("click", () => {
+      const name = newConnectionNameInput.value.trim();
+      if (!name) {
+        setStatus("Enter a connection name first.", true);
+        return;
+      }
+      vscode.postMessage({
+        type: "createConnection",
+        name,
+      });
+      newConnectionNameInput.value = "";
+      setStatus("Creating connection…", false);
+    });
+    toggleLayoutOptionsButton.addEventListener("click", () => {
+      setLayoutOptionsCollapsed(!layoutOptionsCollapsed);
+    });
+
+    window.addEventListener("message", (event) => {
+      const message = event.data;
+      if (message?.type === "status") {
+        setStatus(message.message || "", message.kind === "error");
+        return;
+      }
+
+      if (message?.type !== "update") {
+        return;
+      }
+      data = message.data;
+      if (data.layoutConfig) {
+        applyLayoutConfigToInputs(data.layoutConfig);
+      }
+      positionedNodes = withLayout(data);
+      if (selectedId && !positionedNodes.has(selectedId)) {
+        selectedId = null;
+      }
+      setDetails(selectedId ? positionedNodes.get(selectedId) : null);
+      draw();
+    });
+
+    applyLayoutConfigToInputs(data.layoutConfig);
+    setLayoutOptionsCollapsed(true);
+    setDetails(null);
+    draw();
+  </script>
+</body>
+</html>

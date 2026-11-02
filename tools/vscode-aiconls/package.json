@@ -1,0 +1,166 @@
+{
+  "name": "aiconsls",
+  "displayName": "AICON Linter",
+  "description": "A linter for the AICON Project",
+  "version": "0.0.9",
+  "repository": "https://git.tu-berlin.de/ole_l/vscode-aiconls",
+  "author": "Ole Liebich",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.125.0"
+  },
+  "extensionDependencies": [
+    "ms-python.python"
+  ],
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "onLanguage:python",
+    "onLanguage:yaml"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "aiconls.restart",
+        "title": "Restart Language Server",
+        "category": "aiconls"
+      },
+      {
+        "command": "aiconls.runGenerateFiles",
+        "title": "Generate AICON files from spec",
+        "category": "aiconls"
+      },
+      {
+        "command": "aiconls.runGenerateExperimentSpecification",
+        "title": "Generate AICON specification from spec",
+        "category": "aiconls"
+      },
+      {
+        "command": "aiconls.runFixAllSpecMismatches",
+        "title": "Fix all spec mismatches",
+        "category": "aiconls"
+      },
+      {
+        "command": "aiconls.runDynamicParsing",
+        "title": "Run dynamic parsing check",
+        "category": "aiconls"
+      },
+      {
+        "command": "aiconls.installServer",
+        "title": "Install/Update AICON Language Server",
+        "category": "aiconls"
+      },
+      {
+        "command": "aiconls.visualizeSpec",
+        "title": "Visualize spec.yaml",
+        "category": "aiconls"
+      },
+      {
+        "command": "aiconls.setProjectRootToCurrentFolder",
+        "title": "Set AICON project root to current folder",
+        "category": "aiconls"
+      }
+    ],
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "aiconls.setProjectRootToCurrentFolder",
+          "when": "resourceScheme == file"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "aiconls.setProjectRootToCurrentFolder",
+          "group": "aiconls"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "AICON Linter",
+      "properties": {
+        "aiconsls.trace.server": {
+          "type": "string",
+          "enum": [
+            "off",
+            "messages",
+            "verbose"
+          ],
+          "default": "verbose",
+          "markdownDescription": "Controls LSP protocol tracing written to the AICONLS trace output channel. Use `verbose` for full request and notification payloads."
+        },
+        "aiconls.project.root": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Sets the AICON project root (supports `${workspace}`). If empty, the folder of the nearest `spec.yaml` above the active file is used, so that each example of a repository with several is its own project."
+        },
+        "aiconls.server.path": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "Optional absolute path to the language server entrypoint (`linter.py`). If unset, the server in `tools/aiconls` of the workspace is used if there is one, else the extension installs/updates the server from Git into VS Code's extension storage."
+        },
+        "aiconls.server.debug.enabled": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable debugpy attach support for the language server process. When enabled, the server starts with debugpy and can wait for a debugger before handling LSP traffic."
+        },
+        "aiconls.server.debug.port": {
+          "type": "number",
+          "default": 5678,
+          "minimum": 1,
+          "maximum": 65535,
+          "markdownDescription": "TCP port used by debugpy for attaching to the language server process."
+        },
+        "aiconls.server.debug.waitForClient": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "If enabled, the language server waits for a debugger client to attach before continuing startup."
+        },
+        "aiconls.server.gitRepository": {
+          "type": "string",
+          "default": "https://git.tu-berlin.de/ole_l/aiconls",
+          "markdownDescription": "Git repository URL used for automatic language server installation and updates."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run check-types && npm run lint && node esbuild.js",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "package": "npm run check-types && npm run lint && node esbuild.js --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "dependencies": {
+    "elkjs": "^0.12.0",
+    "yaml": "^2.9.0"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "24.x",
+    "@types/semver": "^7.7.1",
+    "@types/vscode": "^1.125.0",
+    "@vscode/python-extension": "^1.0.6",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.0.0",
+    "esbuild": "^0.28.1",
+    "eslint": "^10.5.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.61.1",
+    "vscode-languageclient": "^10.1.0"
+  },
+  "overrides": {
+    "diff": "^8.0.4",
+    "serialize-javascript": "^7.0.6"
+  }
+}

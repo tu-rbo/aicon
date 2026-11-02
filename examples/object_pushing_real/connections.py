@@ -72,7 +72,7 @@ def ee_to_camera_transform(dtype, device):
 def build_connections():
     connections = {
         "KeyPoints2ContactPointsReal": lambda device, dtype, mockbuild: KeyPoints2ContactPointsReal(
-            "KeyPoints2ContactPoints", device=device, dtype=dtype, mockbuild=mockbuild
+            "KeyPoints2ContactPointsReal", device=device, dtype=dtype, mockbuild=mockbuild
         ),
         "ContactPoints2ContactLikelihoodReal": lambda device, dtype, mockbuild: ContactPoints2ContactLikelihoodReal(
             "ContactPoints2ContactLikelihoodReal", device=device, dtype=dtype, mockbuild=mockbuild
@@ -324,9 +324,9 @@ class ObjectvsPush2Interactionlikelihood(ActiveInterconnection):
         super().__init__(
             name,
             {
-                "object_position": (NUM_KEYPOINTS, 2),
+                "object_position": (3,),
                 "pusher_point": (2,),
-                "interaction_likelihood": (NUM_KEYPOINTS, 2),
+                "interaction_likelihood": (1,),
             },
             dtype=dtype,
             device=device,
@@ -371,7 +371,9 @@ class ContactPoints2PushVelocityDirectionsReal(ActiveInterconnection):
     ):
         super().__init__(
             name,
-            {
+            # object_COM is not a quantity of any component: ContactsEstimator computes it from the keypoints and passes
+            # it to connection_func, which the linter does not model
+            {  # aiconls: ignore-error E201
                 "keypoint_locations": (NUM_KEYPOINTS, 2),
                 "contactpoint_locations": (NUM_KEYPOINTS, 2),
                 "object_COM": (2,),
@@ -600,7 +602,7 @@ class Keypoints2ObjectHeight(ActiveInterconnection):
     ):
         super().__init__(
             name,
-            {"keypoints_in_CF": (NUM_KEYPOINTS, 3), "pose_ee": (6,), "object_height": (1,), "object_position": (2,)},
+            {"keypoints_in_CF": (NUM_KEYPOINTS, 3), "pose_ee": (6,), "object_height": (1,), "object_position": (3,)},
             dtype=dtype,
             device=device,
             mockbuild=mockbuild,
@@ -981,7 +983,7 @@ class KeyPoint2ObjectUncertainty(ActiveInterconnection):
             name,
             {
                 "keypoint_locations": (NUM_KEYPOINTS, 2),
-                "object_uncertainty": (NUM_KEYPOINTS),
+                "object_uncertainty": (1,),
                 "object_height": (1,),
                 "pose_ee": (6,),
             },

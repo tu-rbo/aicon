@@ -1,0 +1,20 @@
+connections:
+  testConnection:
+    components: [TestSensor, TestEstimator]
+
+
+components:
+  TestSensor:
+    component_type: Sensor
+    dtype: double
+    quantities:
+      test_value:
+        shape: (1,4)
+      test_value2:
+        shape: (2,4)
+
+  TestEstimator:
+    component_type: Estimator
+    quantities:
+      test_value:
+        shape: (1,4)

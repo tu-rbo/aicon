@@ -139,7 +139,7 @@ class NavAgentSensor(SensorComponent):
 
 
 class NavTargetSensor(SensorComponent):
-    cls_quantity_names_and_shapes: Dict[str, Tuple[int]] = {"target_meas": (1,)}
+    cls_quantity_names_and_shapes: Dict[str, Tuple[int]] = {"target_meas": (2,)}
 
     def obtain_measurements(self) -> bool:
         self.timestamp = self.timestamp.clone()

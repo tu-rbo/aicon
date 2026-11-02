@@ -33,6 +33,8 @@ import torch
 from aicon_base.experiment_util.spec_yaml import graph_spec, spec_yaml
 
 REPOSITORY_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# the ROS middleware sends every quantity on a topic of its own, which any connection declaring it receives
+ROS_ROUTING_NOTE = "Connections also list the components owning one of their quantities: with ROS they reach it too."
 BLOCKSWORLD_GOALS = ["UnstackAll", "SmartStackAonBonC", "UnstackAonB", "StackAonB", "StackAonBonC"]
 
 
@@ -44,6 +46,8 @@ class Graph:
     kwargs: Dict = field(default_factory=dict)
     goal_variants: List[Dict] = field(default_factory=list)  # kwargs of the same graph with other goals
     notes: Tuple[str, ...] = ()
+    routing_by_name: bool = False  # the ROS middleware: quantities reach every connection declaring them
+    graph_variants: List[Dict] = field(default_factory=list)  # kwargs of other configurations covered by the spec
     needs_modules: Tuple[str, ...] = ()  # what building the graph imports besides AICON
     needs_ros: bool = False
     gpus: int = 0  # CUDA devices the graph places components on
@@ -57,7 +61,12 @@ class Graph:
         previous = torch.get_default_dtype()
         torch.set_default_dtype(self.default_dtype)
         try:
-            spec = graph_spec(self.builders(), goal_variants=[self.builders(**v) for v in self.goal_variants])
+            spec = graph_spec(
+                self.builders(),
+                goal_variants=[self.builders(**v) for v in self.goal_variants],
+                routing_by_name=self.routing_by_name,
+                graph_variants=[self.builders(**v) for v in self.graph_variants],
+            )
         finally:
             torch.set_default_dtype(previous)
         header = [
@@ -102,22 +111,28 @@ GRAPHS = [
         "examples.drawer_sim.extended.experiment_specifications",
         "get_building_functions",
         kwargs={"env": None},
+        graph_variants=[{"triangulation": False}],
         notes=(
-            "With --no-triangulation, DrawerPosSensor and the DrawerDirectMeasurement connection replace BearingSensor",
-            "and the camera connections ProjectiveGeometry and VisibleLikelihood.",
+            "Covers both configurations: with --no-triangulation, DrawerPosSensor and the DrawerDirectMeasurement",
+            "connection take the place of BearingSensor and the camera connections ProjectiveGeometry and",
+            "VisibleLikelihood.",
         ),
     ),
     Graph(
         "examples/object_pushing_real/spec.yaml",
         "examples.object_pushing_real.experiment_specifications",
         "get_building_functions",
+        notes=(ROS_ROUTING_NOTE,),
         needs_ros=True,
+        routing_by_name=True,
     ),
     Graph(
         "examples/drawer_manipulation/spec.yaml",
         "examples.drawer_manipulation.experiment_specifications",
         "get_basic_building_functions_joint_level",
+        notes=(ROS_ROUTING_NOTE,),
         needs_ros=True,
+        routing_by_name=True,
         gpus=2,
     ),
 ]
